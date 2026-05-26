@@ -1,0 +1,2064 @@
+# Progress.md
+
+## Current Goal
+
+Detailed Phase 19 OCR run comparison remains complete at the current code/test level against `docs/Plan.md`, and the OCR CLI has explicit parity for the existing GUI actions `Resume Failed Only` and `Rerun Empty Only`. The launcher-polish follow-up is now complete too: VOCra can now be launched directly from inside the `vocra/` folder without requiring the user to run commands from the parent repository root. The next honest goals are still interactive GUI smoke validation and broader Phase 20 polish.
+
+## Current Status
+
+Detailed Phase 18 is now complete at the current code/test level against `docs/Plan.md` acceptance criteria. The Package tab is no longer a placeholder or a narrow first slice: it can choose prepare run, choose OCR run, choose Package format (`srt`), choose review-state behavior for the selected OCR run, edit Package config that currently affects real packaging behavior, preview SRT through the same join logic used by export, export SRT through the existing core package service, inspect package runs, open generated package artifacts, and open the effective output folder.
+
+This session re-read the design/product/agent/plan docs plus this progress file and intentionally chose a narrow CLI-parity task instead of starting broader GUI smoke automation or polish work. That parity slice is now complete at the current code/test level: `vocra ocr` exposes `resume-failed` and `rerun-empty`, both reuse the existing OCR service and run-artifact behavior, and no OCR timing ownership moved away from Prepare.
+
+This session has now re-read the docs again and chosen the next honest task directly from `docs/Plan.md` Phase 20. The repository root `README.md` is still the old VideOCR README describing Google Lens, one-click extraction, and legacy binaries, which no longer matches VOCra's product identity or current command surface. Updating quickstart/troubleshooting docs is therefore a real plan-level gap, not cosmetic churn.
+
+That documentation gap is now closed for the root entry point at the current code/doc level. `README.md` now describes VOCra rather than the old VideOCR product, documents the staged workflow and durable artifact model, shows the current CLI commands that actually exist (`project`, `prepare`, `ocr`, `review`, `package`, `gui`), and records the current status honestly instead of implying the old one-click or Google Lens paths are the primary product.
+
+This session has now narrowed the remaining separation problem further. Runtime VOCra code no longer imports `VideOCR.py` or `CLI/videocr`, but there are still repo-level couplings that would block a clean standalone VOCra repo if copied as-is: versioning still comes from the root `_version.py`, `pyproject.toml` still publishes the old `VideOCR` package metadata and URLs, setuptools package discovery is not yet configured for a clean VOCra install, and the docs still mention some migration-era legacy details as current state.
+
+Those repo-level couplings are now removed for the active VOCra package path. Version ownership now lives inside `vocra/`, `pyproject.toml` publishes and discovers VOCra rather than the old VideOCR package metadata shape, `python -m vocra` works as a package entry point, and the root `_version.py` file has been deleted after moving all active references away from it.
+
+One usability gap still remains after that separation work: Python package resolution still expects the repository root to be on `sys.path`, so standing directly inside the `vocra/` folder and trying to launch the app is not yet friendly. This is a Phase 20 polish problem rather than an architecture problem, and the fix should be a small in-folder launcher rather than re-coupling VOCra back to the parent repo layout.
+
+That usability gap is now closed with a small in-folder launcher. A shell opened directly inside `vocra/` can now run `python run.py ...` or `run.cmd ...`, which bootstraps the parent repository root onto `sys.path` and then dispatches through the normal VOCra CLI entrypoint without reintroducing runtime dependence on `VideOCR.py` or `CLI/videocr`.
+
+This session has re-read the design/product/agent/plan docs plus this progress file and has explicitly chosen the next implementation step instead of jumping straight into more GUI wiring. The current target is a compare-run service foundation that can load multiple OCR runs for the same prepared segments and persist a chosen winner back into durable review-state artifacts, keeping the work artifact-driven and testable before any compare UI is introduced.
+
+That first compare-run foundation is now complete at the current code/test level. The app layer can now load side-by-side OCR comparison data for multiple runs tied to the same Prepare source, preserve prepared timing and representative-image evidence while comparing OCR text, and write a chosen winner back into the target OCR run's durable `review_state.jsonl`.
+
+This session is explicitly not stopping at that foundation layer. The remaining Phase 19 gap is now well-scoped: the current repository still lacks a real compare-run UI/CLI workflow that satisfies the user-facing tasks and acceptance criteria in `docs/Plan.md`, so this session is focused on closing that gap end-to-end.
+
+That gap is now closed at the current code/test level. Phase 19 now has real user-facing surfaces instead of only service scaffolding: CLI compare commands under `vocra review`, Review-tab compare controls in the GUI, per-segment candidate selection, and verified packaging behavior that follows the chosen compare winner through the target OCR run's `review_state.jsonl`.
+
+The latest completion pass also tightened acceptance evidence for Phase 18 directly instead of relying only on implementation shape. There is now explicit test coverage that the GUI/app packaging path matches the CLI packaging result for the same options, and explicit test coverage that rejected-review vs. ignore-review behavior changes the packaged output as expected.
+
+Detailed Phase 16 remains complete at the current code/test level against `docs/Plan.md` acceptance criteria. The GUI OCR tab has: prepare-run selector, backend selector, dynamic backend-aware config behavior, `Test Backend`, `Run OCR`, `Resume Failed Only`, `Rerun Empty Only`, OCR runs table, selected-run targeting, selected-run config reload, and selected-artifact opening. The latest session added a tiny helper extraction in `vocra/gui/ocr_tab.py` plus focused tests so OCR-run table/detail presentation is covered directly without moving artifact logic into widgets.
+
+The latest completed session closed one remaining parity gap around that OCR tab: the GUI-only `Test Backend` action now has a CLI equivalent via `vocra ocr test-backend`, reusing the same backend `test_connection(...)` contract and shared OCR config parsing rather than inventing a second probe path.
+
+Detailed Phase 17 is now complete at the current code/test level against `docs/Plan.md` acceptance criteria. The Review tab is no longer a placeholder or a thin editor slice: it now loads review items from durable artifacts through app/core services, exposes prepare-run / OCR-run / filter selection, shows representative image evidence in-tab, shows raw OCR output with graceful fallback when raw artifacts are missing, supports single-item save plus filter-based batch status actions, and supports keyboard/navigation shortcuts for fast review.
+
+What remains after detailed Phases 16, 17, and 18 is no longer missing core OCR/Review/Package controls. The honest remaining work is:
+- interactive smoke validation for the OCR tab, because current verification is still unit-test-heavy plus `gui --help`
+- interactive smoke validation for the Review tab, especially real shortcut handling and image rendering in a live GUI session
+- interactive smoke validation for the Package tab, especially preview/export/open-folder flow in a real GUI session
+- Phase 20 polish and packaging work after smoke validation
+
+This session finished the Review-tab target end-to-end at the current code/test level instead of stopping at another partial slice. The next detailed plan gap is no longer Review; it is Phase 18 Package GUI plus broader interactive smoke coverage for the completed OCR/Review GUI tabs.
+
+The current session is now moving to the next honest plan step after detailed Phase 16: start Phase 17 GUI Review tab. The Review core/CLI layer already exists, but the GUI still has only a placeholder tab, so this is a real gap against the later detailed sections of `docs/Plan.md`.
+
+This session completed another honest Phase 16 OCR-tab slice at the current code/test level: the OCR runs table now shows richer artifact-derived status with `Edited` and `Created` fields, bringing the GUI closer to the run-list shape described in `docs/Product.md`. The biggest remaining Phase 16 gaps are now mostly polish and validation: deciding how much more run detail belongs in the table vs. detail pane, and exercising the OCR tab through a real interactive smoke path.
+
+This session completed another honest Phase 16 OCR-tab slice at the current code/test level: the GUI can now load backend configuration back from a selected OCR run's `ocr_config.json`, so rerun/resume workflows no longer depend only on manually re-entering endpoint/model/command settings. The biggest remaining Phase 16 gaps are now table/detail polish, broader selected-run UX, and real OCR-tab smoke validation in an interactive GUI session.
+
+This session completed another honest Phase 16 OCR-tab slice at the current code/test level: the GUI now shows OCR runs in a dedicated table, exposes existing run ids directly in the form, and lets the user select a run for resume/rerun and artifact inspection without depending only on free-typed `run_id` text. The biggest remaining Phase 16 gaps are now table polish, richer run-detail UX, and smoke validation of the OCR tab in a real interactive GUI session.
+
+This session completed the next honest Phase 16 OCR-tab slice at the current code/test level: the GUI now exposes explicit `Resume Failed Only` and `Rerun Empty Only` actions, and those actions reuse the same durable OCR run artifacts instead of creating a GUI-only rerun path. The biggest remaining Phase 16 gap is now OCR-run presentation and selection UX, especially a clearer run list/table instead of the current summary text block.
+
+Session focus update: the active work has moved from recent Project/Prepare GUI repairs to the first real detailed Phase 16 GUI OCR slice. The current OCR GUI is still only a placeholder tab even though core OCR services, backends, and CLI flows already exist.
+
+This session completed that first OCR GUI slice at the current code/test level: the placeholder OCR tab has been replaced with a service-backed tab that can inspect OCR-stage artifact context, show prepare/backend options, run OCR through the existing core service path, and open the latest OCR artifacts. The current OCR GUI is still intentionally narrow and is best proven first with the fake backend.
+
+The next honest gap against `Plan.md` Phase 16 is no longer basic OCR launch. The remaining OCR-tab work now centers on backend-specific UX and control surfaces: backend-aware config behavior, `Test Backend`, clearer resume/rerun affordances, and stronger OCR-run visibility.
+
+This session completed the next planned OCR-tab slice as well: OCR GUI now adjusts config inputs by backend, includes the missing `Test Backend` action through app/core services, and exposes local-command-specific fields instead of only the original generic form. The most important remaining Phase 16 gaps are now resume-oriented actions and a more explicit OCR run list/table presentation.
+
+The repository is still mostly the legacy VideOCR application layout, but VOCra now has the full detailed Phase 11 Prepare slice and the full detailed Phase 12 Review slice working at the core/CLI level. Detailed Phase 13 GUI shell, detailed Phase 14 GUI Project tab, and detailed Phase 15 GUI Prepare tab remain the intended completed slices at the current code/test level, but this session corrected two real GUI regressions that user testing exposed: Create Project had a broken key collision, and Prepare did not automatically prime an initial preview after project create/open. After these fixes, the current Project + Prepare GUI path is in a more honest “usable but still lightly tested” state, and the next unstarted detailed GUI phase is Phase 16 GUI OCR tab.
+
+## Completed
+
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md`, then updated `docs/progress.md` before coding to make the launcher-polish task explicit.
+- Added `vocra/run.py` as a direct launcher that works when the shell is already inside the `vocra/` folder by adding the repository root to `sys.path` and dispatching through `vocra.cli.main`.
+- Added `vocra/run.cmd` as a simple Windows command wrapper around `vocra/run.py`.
+- Extended `tests/unit/test_cli_version.py` with coverage that `python run.py --version` works when executed with `cwd=vocra/`.
+- Verified the launcher fix with Ruff, focused CLI version tests, the full `unittest` suite, and real `python run.py --version/--help` invocations from inside the `vocra/` folder.
+
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md`, then updated `docs/progress.md` before coding to make the repo-separation task explicit.
+- Added `vocra/_version.py` and moved version ownership into the VOCra package so runtime/package versioning no longer depends on the root `_version.py`.
+- Updated `vocra/__init__.py` to import version metadata from `vocra._version` and added `vocra/__main__.py` so `python -m vocra` now works directly.
+- Updated `pyproject.toml` so the package now identifies as `VOCra`, discovers `vocra*` packages, exposes a `vocra` console script, and reads its version from `vocra._version.__version__`.
+- Updated `build.py` to read the version from `vocra._version` instead of the removed root `_version.py`.
+- Deleted the root `_version.py` after moving active consumers to the package-owned version source.
+- Updated `README.md` and `docs/Troubleshooting.md` so they no longer describe legacy repo-level metadata as a current VOCra requirement and now point to the standalone package/runtime behavior instead.
+- Extended `tests/unit/test_cli_version.py` so version checks now cover both `python -m vocra.cli.main --version` and `python -m vocra --version`.
+- Verified the separation slice with Ruff, focused CLI version tests, the full `unittest` suite, package import/version checks, and `python -m vocra --help/--version`.
+
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md`, then updated `docs/progress.md` before coding to make the Phase 20 documentation-polish slice explicit.
+- Replaced the legacy root `README.md` with a VOCra-focused overview, architecture summary, current-status section, CLI/GUI quickstart, deterministic fixture demo, and development check guidance that match the current repository surface.
+- Added `docs/Troubleshooting.md` with common migration/setup/runtime notes for VOCra contributors and testers, including dependency-group install issues, missing `pytest`, Prepare detector setup, OCR rerun expectations, and legacy naming confusion.
+- Verified the new docs against the real command surface by rerunning CLI help, GUI help, and a fixture-based OCR -> package demo on a temporary project copy.
+- Recorded one failed attempt during doc verification: the first temporary demo command mistakenly tried to `Get-Content` the `package/runs` directory itself after successful OCR/package execution, which produced an access error; the verification was rerun cleanly against the generated `output.srt`.
+
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md`, then updated `docs/progress.md` before coding to make this session's OCR CLI parity task explicit.
+- Extended `vocra/cli/ocr_cmd.py` with dedicated `vocra ocr resume-failed` and `vocra ocr rerun-empty` commands, reusing the existing OCR service contract instead of creating a second resume/rerun implementation path.
+- Refactored shared OCR CLI run-argument setup in `vocra/cli/ocr_cmd.py` so `run`, `resume-failed`, and `rerun-empty` share the same backend/config surface while keeping `--force` limited to plain `run`.
+- Extended `tests/unit/test_ocr_cli.py` with focused coverage that the new CLI commands forward `run_id`, preserve non-force resume behavior, and set `rerun_empty=True` only for the empty-text rerun path.
+- Ran Ruff, focused OCR CLI/service/app tests, the full `unittest` suite, and `vocra ocr` help surfaces for the new commands; all passed.
+
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md`, then updated `docs/progress.md` before coding to explicitly finish all remaining user-facing work for Phase 19 instead of stopping at the compare foundation.
+- Extended `vocra/gui/review_tab.py` so Review now contains a real OCR-compare surface: target-run context, multi-select source OCR runs, compare-candidate table, compare summary, and a `Use Selected Candidate` action.
+- Extended `vocra/gui/main_window.py` so Review compare is wired end-to-end through services: compare refresh follows selected Review context, segment selection updates compare candidates, winner application persists through app services, and Review/Package refresh after compare keeps the artifact chain consistent.
+- Extended `vocra/cli/review_cmd.py` with `vocra review compare-list` and `vocra review compare-apply`, giving the compare workflow a CLI equivalent instead of leaving it GUI-only.
+- Extended `vocra/app/ocr_compare_service.py` with direct comparison-item lookup so GUI and CLI can target one segment cleanly without duplicating compare traversal logic.
+- Extended `vocra/app/__init__.py` exports for the compare lookup helper.
+- Added `tests/unit/test_review_tab.py` for compare-candidate table presentation.
+- Extended `tests/unit/test_review_cli.py` with compare-list and compare-apply coverage.
+- Extended `tests/unit/test_ocr_compare_app_service.py` so compare winner application is also verified against packaging behavior: after choosing a winner from another OCR run, `preview_srt(...)` for the target OCR run now emits the chosen text.
+- Recorded one implementation fix during this completion pass: the first Review compare refresh wiring would have reloaded the whole Review summary when only compare source-run selection changed, which risked clobbering unsaved editor state; the event handling was then narrowed so compare refresh updates compare state without forcing a full Review refresh unless prepare/ocr/filter context actually changed.
+- Ran Ruff, focused compare tests, the full `unittest` suite, `vocra review compare-list --help`, `vocra review compare-apply --help`, and `vocra gui --help` after the Phase 19 completion pass; all passed.
+
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md`, then updated `docs/progress.md` before coding to explicitly start a service-first Phase 19 OCR comparison foundation.
+- Extended `vocra/app/models.py` with typed OCR comparison models so compare-run state stays in the app/service layer rather than becoming ad hoc GUI dicts.
+- Added `vocra/app/ocr_compare_service.py` with artifact-backed comparison loading for multiple OCR runs, human-readable compare summary rendering, and winner-selection persistence into the target run's `review_state.jsonl`.
+- Extended `vocra/app/__init__.py` to export the new OCR comparison models and service helpers for future GUI or CLI surfaces.
+- Added `tests/unit/test_ocr_compare_app_service.py` to cover multi-run compare loading, missing-segment handling, cross-run winner selection, and same-run accept behavior.
+- Recorded one failed attempt during this session: the first compare-run implementation incorrectly filtered out OCR runs whose `ocr_config.json` did not expose `input_prepare_id`, which broke comparison against older/minimal runs like the fixture `fake` run; the logic was then relaxed so runs with missing prepare metadata can still participate when they are not explicitly contradictory.
+- Ran Ruff, targeted OCR compare/review/OCR app tests, the full `unittest` suite, and `vocra gui --help` after the Phase 19 foundation slice; all passed.
+
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md`, then updated `docs/progress.md` before coding to explicitly finish detailed Phase 18 instead of stopping at another Package increment.
+- Extended `vocra/app/models.py` so Package GUI now has an explicit format field plus richer Package summary state (`format_options`, resolved review-state path, review-state status), keeping Package selection state typed in the app layer rather than inferred in widgets.
+- Extended `vocra/app/package_service.py` so Package summary now describes the resolved review-state artifact/status for the selected OCR run, validates Package format explicitly, and can resolve the effective output folder for GUI actions without moving path logic into `main_window.py`.
+- Extended `vocra/gui/package_tab.py` so the Package UI now shows explicit `Format` and `Review state` controls and includes the missing `Open Output Folder` action from `docs/Product.md` / `docs/Plan.md`.
+- Extended `vocra/gui/main_window.py` so project open/create resets Package form state through app services, Package refresh reacts to the format/review controls, and the new output-folder action goes through the app-layer Package path resolver.
+- Extended `tests/unit/test_package_app_service.py` with acceptance-style coverage for GUI/app Package behavior: GUI/app export now matches CLI output for the same options, rejected-review vs. ignore-review behavior changes output as expected, and output-folder resolution prefers explicit output path when present.
+- Updated `tests/unit/test_package_tab.py` for the richer Package summary/form contract.
+- Recorded one failed attempt during this completion pass: `ruff check` initially failed on import ordering in `tests/unit/test_package_app_service.py` and `vocra/app/__init__.py`; both were fixed before rerunning checks.
+- Ran Ruff, targeted Package/app tests, the full `unittest` suite, and `vocra gui --help` after the final Phase 18 completion pass; all passed.
+
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md`, then updated `docs/progress.md` before coding to explicitly start the first real detailed Phase 18 GUI Package slice.
+- Refactored `vocra/core/package/service.py` so Package preview can reuse the real Prepare/OCR/Review join logic through a new non-writing preview path instead of duplicating packaging rules in the GUI layer.
+- Extended `vocra/app/models.py` with Package-tab app models (`PackageRunListItem`, `PackageStageSummary`, `PackageConfigForm`, `PackagePreviewOutcome`, `PackageExportOutcome`) and extended `AppState` with `package_summary`.
+- Added `vocra/app/package_service.py` as the first GUI-facing Package service module, including Package summary loading, selected run resolution, preview/export wrappers, and Package text rendering.
+- Extended `vocra/app/service.py` and `vocra/app/__init__.py` so project-open state now carries Package summary context alongside Project, Prepare, OCR, and Review.
+- Added `vocra/gui/package_tab.py` as the first dedicated Package tab module with artifact selectors, Package run table, preview panel, export controls, and selected-run presentation helpers.
+- Extended `vocra/gui/main_window.py` so the Package tab is wired into the shell, Package preview/export actions go through app/core services, Package runs can be selected/opened, and OCR/Review changes refresh Package options.
+- Added `tests/unit/test_package_app_service.py` for Package summary loading plus preview/export behavior, and `tests/unit/test_package_tab.py` for Package-tab table/detail presentation helpers.
+- Extended `tests/unit/test_app_service.py` so project-open state now asserts Package summary presence.
+- Recorded one failed attempt during this session: `ruff check` first caught import ordering in `vocra/app/package_service.py`, and the first Package integration patch introduced an indentation error in `vocra/gui/main_window.py`; both were fixed before rerunning checks.
+- Ran Ruff, targeted Package/app tests, `vocra gui --help`, and the full `unittest` suite after the Package-tab slice; all passed.
+
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md`, then updated `docs/progress.md` before coding to explicitly target full detailed Phase 17 completion instead of another small Review increment.
+- Extended `vocra/app/models.py` with `ReviewBatchOutcome` and `ReviewSelectionDetail` so Review GUI evidence/batch behavior stays typed in the app layer rather than leaking ad hoc dicts into widgets.
+- Extended `vocra/app/review_service.py` with selected-item detail loading (representative-image preview rendering, raw OCR output loading with graceful missing-artifact fallback), filter-based batch-save helpers, and navigation helpers for Review GUI movement.
+- Extended `vocra/app/__init__.py` exports so the new Review detail/navigation/batch helpers stay available through the GUI-facing app layer.
+- Extended `vocra/gui/review_tab.py` with in-tab image preview, raw OCR output viewer, previous/next/next-suspicious controls, filter-based batch status buttons, and shortcut help text.
+- Extended `vocra/gui/main_window.py` so Review selection now loads evidence through app services, keyboard shortcuts are wired only when the Review tab is active, single-item saves infer `edited` status when text changes, and batch review actions reuse the core filter-driven review contract.
+- Extended `tests/unit/test_review_app_service.py` with coverage for missing-raw fallback, valid-image preview rendering, filter-based batch saves, next/previous navigation, and suspicious-item navigation.
+- Recorded one failed attempt during this session: `ruff check` initially failed on import ordering after the Phase 17 completion patch, and the first Review-detail test incorrectly assumed fixture representative images were valid; both issues were fixed before rerunning checks.
+- Ran Ruff, targeted Review/app tests, `vocra gui --help`, and the full `unittest` suite after the full Phase 17 completion patch; all passed.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` before starting the next step after detailed Phase 16.
+- Updated `docs/progress.md` before coding so the active task was explicit: start detailed Phase 17 GUI Review tab with a small service-backed slice.
+- Added `vocra/app/review_service.py` as the first GUI-facing Review service module, including durable review-item loading, run/filter selection defaults, review-item lookup, and save wrappers around the existing core review services.
+- Extended `vocra/app/models.py` with Review-tab app models (`ReviewListItem`, `ReviewStageSummary`, `ReviewEditForm`, `ReviewSaveOutcome`) and extended `AppState` with `review_summary`.
+- Extended `vocra/app/service.py` and `vocra/app/__init__.py` so project-open state now carries Review summary context alongside Project, Prepare, and OCR.
+- Added `vocra/gui/review_tab.py` as the first dedicated Review tab module, replacing the old placeholder-only tab structure with selectors, review-item table, selected-item detail fields, and save/status actions.
+- Extended `vocra/gui/main_window.py` so project open/create, OCR completion, and explicit Review refresh now repopulate the Review tab through app services; Review item selection, single-item save, status shortcuts (`Accept`, `Reject`, `Mark Pending`), and representative-image opening are now wired into the shell.
+- Added `tests/unit/test_review_app_service.py` to cover Review-stage app-service summary loading, item lookup, and save/reload behavior.
+- Extended `tests/unit/test_app_service.py` so `open_project_state(...)` now asserts Review summary state is present.
+- Recorded one failed attempt during this session: `ruff check` initially failed on one import-formatting issue in `vocra/app/review_service.py` and one missing blank line in `vocra/gui/review_tab.py`; both were fixed before rerunning checks.
+- Ran Ruff, targeted Review/app tests, `vocra gui --help`, and the full `unittest` suite after the first Review-tab slice; all passed.
+
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` before changing the OCR CLI.
+- Updated `docs/progress.md` before coding so the active task was explicit: add CLI parity for OCR backend testing.
+- Extended `vocra/cli/ocr_cmd.py` with a new `vocra ocr test-backend` command and shared OCR config argument wiring used by both `ocr run` and backend testing.
+- Added `tests/unit/test_ocr_cli.py` to cover successful backend testing, failed backend probes returning exit code `1`, and config-file loading with CLI flag overrides.
+- Ran Ruff, targeted OCR CLI/app tests, `vocra ocr test-backend --help`, a real `vocra ocr test-backend --backend fake` invocation, and the full `unittest` suite after the change; all passed.
+
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` before deciding whether Phase 16 was actually complete.
+- Rechecked the detailed Phase 16 acceptance criteria in `docs/Plan.md` against the implemented OCR GUI surface instead of continuing phase work by inertia.
+- Extracted `_build_selected_ocr_run_lines(...)` in `vocra/gui/ocr_tab.py` so selected-run detail rendering is testable without pushing more behavior into `main_window.py`.
+- Added `tests/unit/test_ocr_tab.py` to cover OCR run-table rows plus selected-run detail lines, including the `Edited` and `Created` presentation fields.
+- Recorded one failed attempt during this session: `ruff check` initially failed on an extra trailing newline in `tests/unit/test_ocr_tab.py`; this was fixed immediately and checks were rerun.
+- Reran Ruff, targeted OCR/app/gui tests, `vocra gui --help`, and the full `unittest` suite after the final OCR-tab helper/test slice; all passed.
+- Marked detailed Phase 16 as complete at the current code/test level in this progress file, with remaining work moved to smoke validation and later detailed phases rather than mislabeled as unfinished OCR-tab core work.
+
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` before continuing this Phase 16 slice.
+- Updated `docs/progress.md` before coding so the active goal explicitly moved from selected-run config reuse to richer OCR runs table status.
+- Extended `vocra/app/models.py` so `OcrRunListItem` now carries `created_label` and `edited_count` for richer OCR run presentation.
+- Extended `vocra/app/ocr_service.py` so OCR run summaries now derive `edited_count` from `review_state.jsonl` and derive a readable created timestamp from timestamp-shaped OCR run ids.
+- Extended `vocra/gui/ocr_tab.py` so the OCR runs table now shows `Edited` and `Created` columns and selected-run details include that same status context.
+- Extended `tests/unit/test_ocr_app_service.py` to cover the new created/edited OCR run summary fields.
+- Ran Ruff, targeted OCR/app/gui tests, `vocra gui --help`, and the full `unittest` suite after the OCR run-status polish slice; all passed.
+
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` before continuing this Phase 16 slice.
+- Updated `docs/progress.md` before coding so the active goal explicitly moved from OCR run-table work to selected-run config reuse.
+- Extended `vocra/app/ocr_service.py` with `load_ocr_config_form_for_run(...)`, so OCR GUI can repopulate backend config from a durable `ocr_config.json` artifact instead of reconstructing it in widget code.
+- Extended `vocra/app/__init__.py` exports so selected-run config loading stays available through the GUI-facing app layer.
+- Extended `vocra/gui/ocr_tab.py` with a `Load Selected Run Config` action, keeping selected-run config reuse explicit instead of automatically overwriting in-progress edits on table click.
+- Extended `vocra/gui/main_window.py` so the OCR tab can load saved config from the selected run, refresh the GUI form safely through app services, and preserve selected-run detail behavior.
+- Extended `tests/unit/test_ocr_app_service.py` to cover loading OCR form state from a saved run config and the missing-config error path.
+- Ran Ruff, targeted OCR/app/gui tests, `vocra gui --help`, and the full `unittest` suite after the selected-run config-reuse slice; all passed.
+
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` before continuing this Phase 16 slice.
+- Updated `docs/progress.md` before coding so the active goal explicitly moved from OCR rerun controls to OCR run table/selection UX.
+- Extended `vocra/app/models.py` so `OcrRunListItem` now carries `model_name`, allowing OCR-run presentation to show more backend context without pushing config-file reads into GUI code.
+- Extended `vocra/app/ocr_service.py` so OCR summaries now parse optional model metadata, can find a run item by `run_id`, and render that extra metadata for run presentation.
+- Extended `vocra/app/__init__.py` exports so the GUI-facing layer can resolve selected OCR runs through app services instead of GUI-local artifact lookups.
+- Extended `vocra/gui/ocr_tab.py` with the first OCR runs table, run-id combo options sourced from artifact summaries, and selected-run detail rendering.
+- Extended `vocra/gui/main_window.py` so clicking an OCR table row updates the current form target run, syncs selected-run details, and makes artifact-open actions prefer the selected run instead of always using the latest run.
+- Extended `tests/unit/test_ocr_app_service.py` to cover model-less run metadata and `find_ocr_run_item(...)`.
+- Recorded one failed attempt during this session: Ruff flagged import ordering in `vocra/gui/main_window.py` after the new OCR table wiring; this was fixed before rerunning checks.
+- Ran Ruff, targeted OCR/app/gui tests, `vocra gui --help`, and the full `unittest` suite after the OCR run-table slice; all passed.
+
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` before continuing this Phase 16 slice.
+- Updated `docs/progress.md` before coding so the active goal explicitly moved from backend-testing polish to explicit OCR resume/rerun controls.
+- Extended `vocra/core/ocr/service.py` so resume logic now tracks the latest normalized row per `segment_id` and supports `rerun_empty=True`, which reruns only the segments whose latest normalized text is empty while preserving raw/normalized history.
+- Extended `vocra/app/ocr_run_service.py` with explicit GUI-facing wrappers for `Resume Failed Only` and `Rerun Empty Only`, including safe target-run resolution/validation against existing OCR artifacts.
+- Extended `vocra/app/__init__.py` exports so the new OCR rerun app services remain available through the GUI-facing app layer.
+- Extended `vocra/gui/ocr_tab.py` with the missing Phase 16 OCR action buttons: `Resume Failed Only` and `Rerun Empty Only`.
+- Extended `vocra/gui/main_window.py` so those OCR actions run asynchronously through the app/core service path, reuse the existing OCR run status/log plumbing, and never move rerun selection logic into widgets.
+- Extended `tests/unit/test_ocr_service.py` with coverage for `rerun_empty=True` on an existing OCR run.
+- Extended `tests/unit/test_ocr_run_app_service.py` with coverage for the new GUI-facing resume/rerun wrappers and the `rerun_empty` flag forwarding.
+- Ran Ruff, targeted OCR/app/gui tests, `vocra gui --help`, and the full `unittest` suite after the OCR resume/rerun slice; all passed.
+
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Updated `docs/progress.md` before coding so the active task was explicit: advance detailed Phase 16 with backend-aware OCR config behavior and a GUI `Test Backend` path.
+- Extended `vocra/app/models.py` with `OcrBackendFormSpec`, `OcrBackendTestOutcome`, and the missing `local-command` GUI form fields (`command_template`, `stdout_format`, `working_dir`) on `OcrConfigForm`.
+- Extended `vocra/app/ocr_service.py` with backend form specs plus backend-default application, so OCR GUI behavior can stay driven by app-layer backend descriptions instead of ad hoc widget branching.
+- Extended `vocra/app/ocr_run_service.py` with `test_ocr_backend_connection(...)`, reusing the core backend registry and each backend's `test_connection(...)` contract instead of inventing a GUI-only probe path.
+- Extended `vocra/app/__init__.py` exports so OCR backend form/default/test helpers are available cleanly at the GUI-facing app layer.
+- Extended `vocra/gui/ocr_tab.py` with backend-aware field handling, the missing `Test Backend` button, and explicit `local-command` fields (`command_template`, `stdout_format`, `working_dir`).
+- Extended `vocra/gui/main_window.py` so OCR backend selection reapplies backend defaults/field enablement and GUI backend testing runs asynchronously through the app service layer.
+- Extended `tests/unit/test_ocr_app_service.py` to cover backend form specs and backend-default application.
+- Extended `tests/unit/test_ocr_run_app_service.py` to cover backend-test orchestration and local-command config forwarding from the GUI-facing OCR form.
+- Recorded one failed attempt during this session: Ruff flagged an unused OCR-tab import and a test helper class pattern in `tests/unit/test_ocr_run_app_service.py`; both were fixed before rerunning checks.
+- Ran Ruff, targeted OCR/app/gui tests, `vocra gui --help`, and the full `unittest` suite after the backend-aware/Test-Backend OCR slice; all passed.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Updated `docs/progress.md` before coding so the active task was explicit: start the first minimal useful detailed Phase 16 GUI OCR slice through service-backed, artifact-driven boundaries.
+- Added OCR-stage GUI-facing app models in `vocra/app/models.py`: `OcrRunListItem`, `OcrStageSummary`, `OcrConfigForm`, and `OcrRunOutcome`.
+- Added `vocra/app/ocr_service.py` as a dedicated OCR-tab app-service module that discovers available prepare runs, summarizes OCR runs from durable artifacts, exposes backend options, and renders OCR summary text without pushing manifest parsing into GUI files.
+- Added `vocra/app/ocr_run_service.py` as a dedicated GUI-facing OCR runner that validates selected prepare artifacts, builds backend config from a GUI form, and calls the existing core `run_ocr(...)` service instead of creating a GUI-only OCR path.
+- Extended `vocra/core/ocr/registry.py` with backend-name listing so GUI/app layers can expose backend choices from the same registry used by the core OCR service.
+- Extended `vocra/app/service.py` and `vocra/app/__init__.py` so project-open state now carries OCR summary/config context alongside the existing Project and Prepare slices.
+- Added `vocra/gui/ocr_tab.py` as the first dedicated OCR tab module, with backend/config controls, run status/log display, artifact-summary display, and artifact-open actions.
+- Extended `vocra/gui/main_window.py` so the placeholder OCR tab is replaced by the new OCR module, project open/create refresh OCR context, Prepare completion refreshes OCR prepare-run choices, OCR runs execute in the background through the app service, and the latest OCR artifacts can be opened from the GUI.
+- Added `tests/unit/test_ocr_app_service.py` and `tests/unit/test_ocr_run_app_service.py` so OCR-stage artifact summary behavior and GUI-facing OCR run orchestration are covered directly.
+- Extended `tests/unit/test_app_service.py` so `open_project_state(...)` now asserts OCR summary/config state is present for the fixture project.
+- Recorded one failed attempt during this session: Ruff initially flagged import ordering, an unused OCR-service import, and a lambda default call inside `vocra/gui/main_window.py`; these were fixed before rerunning checks.
+- Ran Ruff, targeted OCR/app/gui tests, `vocra gui --help`, and the full `unittest` suite after the OCR GUI slice; all passed.
+- Fixed an additional real GUI crash reported immediately after the first Project/Prepare repair: `_prime_prepare_preview(...)` in `vocra/gui/main_window.py` was incorrectly calling `.get()` on a PySimpleGUI `Slider`, which crashed `vocra gui` during project create/open flows.
+- Changed `_prime_prepare_preview(...)` to derive its initial preview target from the persisted Prepare config instead of reading directly from the slider widget, which is both safer and more aligned with artifact-driven state.
+- Reran Ruff, targeted GUI/app regression tests, `vocra gui --help`, and the full `unittest` suite after the slider-crash fix; all passed.
+- Re-read the required docs plus `docs/progress.md` after user feedback reported that the claimed GUI usability did not match actual behavior.
+- Recorded the current session goal in `docs/progress.md` before coding: repair current GUI correctness first, then resume normal phase tracking.
+- Fixed a real Project-tab regression in `vocra/gui/project_tab.py` and `vocra/gui/main_window.py`: the project-folder input and the Create Project button were using conflicting keys, which could break the GUI create-project event path.
+- Added automatic Prepare preview priming in `vocra/gui/main_window.py`, so opening or creating a project now immediately tries to show a usable preview frame instead of leaving the Prepare tab visually empty until the user discovers the manual preview button.
+- Added `tests/unit/test_project_tab.py` to lock in the no-key-collision regression fix for the Project tab.
+- Recorded one important architecture/process correction in this session: earlier progress notes overstated GUI readiness because they relied too much on structural tests and not enough on actual user-path behavior.
+- Ran Ruff, targeted GUI/app regression tests, `vocra gui --help`, and the full `unittest` suite after the GUI repair; all passed.
+- Adjusted the GUI shell launch size so VOCra no longer opens oversized by default: added a smaller default window size, a minimum size, and slightly reduced Prepare-tab multiline widths/heights.
+- Ran Ruff and `vocra gui --help` after the GUI sizing adjustment; both passed.
+- Updated `docs/progress.md` before coding so the remaining detailed Phase 15 goal was explicit: finish visual crop move/resize editing and add the missing prepared-images action, then reevaluate the phase against `docs/Plan.md`.
+- Extended `vocra/app/prepare_service.py` with `preview_selection_for_zone_spec(...)`, so persisted crop-zone specs can be staged back onto the preview in display coordinates without moving source-coordinate math into GUI files.
+- Extended `vocra/gui/widgets/crop_canvas.py` and `vocra/gui/widgets/__init__.py` with reusable preview-selection move/resize helpers, so the Prepare canvas can support visual editing modes without embedding rectangle math in `main_window.py`.
+- Extended `vocra/gui/prepare_tab.py` with crop edit modes, a `Stage Active Zone` action, and an `Open Prepared Images` action, closing the remaining explicit Phase 15 Prepare-tab task gaps from `docs/Plan.md`.
+- Extended `vocra/gui/main_window.py` so the Prepare tab can stage an existing zone onto the preview, move or resize it visually, apply the edited selection back to Zone 0 or Zone 1, and open the prepared-images folder.
+- Extended `tests/unit/test_crop_canvas_widget.py` and `tests/unit/test_prepare_app_service.py` so preview-space move/resize math and source-to-preview zone staging are covered.
+- Recorded one failed attempt during this session: Ruff flagged import ordering in `vocra/gui/widgets/__init__.py` after the new crop helper exports were added; this was fixed before rerunning checks.
+- Ran Ruff, targeted crop/app/gui tests, `vocra gui --help`, and the full `unittest` suite after the final Phase 15 Prepare-tab changes; all passed.
+- Detailed Phase 15 from `docs/Plan.md` is now complete at the current code/test level: user-facing Prepare GUI now supports crop drawing, crop persistence in original video coordinates, visual crop editing, responsive Prepare execution, progress/log feedback, stop support, prepared-image/manifest access, and summary refresh after completion.
+- Updated `docs/progress.md` before coding so the next detailed Phase 15 goal explicitly moved from progress/log feedback to first-pass stop support for GUI Prepare runs.
+- Added `vocra/core/prepare/errors.py` with `PrepareCancelledError` as the first explicit Prepare cancellation contract.
+- Extended `vocra/core/prepare/sampler.py` and `vocra/core/prepare/service.py` so Prepare can honor cooperative cancellation requests during sampling and at safe checkpoints between major stages.
+- Extended `vocra/core/prepare/__init__.py` so the cancellation contract is part of the Prepare surface.
+- Extended `vocra/app/prepare_run_service.py` so GUI-facing Prepare runs can accept a `cancel_requested` callback and pass it down to the existing core Prepare orchestration.
+- Extended `vocra/gui/prepare_tab.py` with the first `Stop Prepare` button and updated run-state handling so run/stop button enablement reflects active cancellation state.
+- Extended `vocra/gui/main_window.py` so the GUI now keeps a per-run cancellation event, lets the user request stop, reports that stop is cooperative, and surfaces cancelled runs distinctly from failed runs.
+- Extended `tests/unit/test_prepare_sampler.py` and `tests/unit/test_prepare_run_app_service.py` so cooperative cancellation is covered at both sampler and app-run-service levels.
+- Recorded one failed attempt during this session: Ruff flagged a nested `with` plus import-order issues, and the cancellation mock signature needed adjustment before the suite passed.
+- Ran Ruff, targeted cancellation/app/gui tests, `vocra gui --help`, and the full `unittest` suite after the first Prepare stop-support changes; all passed.
+- Updated `docs/progress.md` before coding so the next detailed Phase 15 goal explicitly moved from first GUI `Run Prepare` to first-pass progress/log feedback for that run path.
+- Added `vocra/core/progress.py` with the first shared typed `ProgressEvent` contract, aligned with the design/agent guidance that stage work should emit typed progress rather than ad hoc strings.
+- Extended `vocra/core/prepare/service.py` so `run_prepare(...)` can now emit stage progress events for sampling, filtering, detection, segment creation, and artifact writing.
+- Extended `vocra/app/models.py` and `vocra/app/__init__.py` with a GUI-facing `PrepareRunProgress` model so GUI code does not consume core progress contracts directly.
+- Extended `vocra/app/prepare_run_service.py` so the GUI-facing Prepare run wrapper can accept a progress callback and translate core `ProgressEvent` objects into GUI-facing `PrepareRunProgress` updates.
+- Extended `vocra/gui/prepare_tab.py` with the first Prepare run log panel and helpers for resetting/appending visible run log text.
+- Extended `vocra/gui/main_window.py` so background Prepare runs now stream progress messages back into the GUI through `write_event_value(...)`, updating both the Prepare run status line and the new log panel while the run is active.
+- Extended `tests/unit/test_prepare_run_app_service.py` so app-layer progress forwarding from core events to GUI-facing progress models is covered.
+- Recorded one failed attempt during this session: Ruff and unit tests caught import-order issues plus a mock signature mismatch after the progress callback wiring; these were fixed before rerunning checks.
+- Ran Ruff, targeted Prepare run app/CLI tests, `vocra gui --help`, and the full `unittest` suite after the first Prepare progress/log changes; all passed.
+- Updated `docs/progress.md` before coding so the next detailed Phase 15 goal explicitly moved from interactive crop follow-up work to the first GUI `Run Prepare` control.
+- Added `vocra/core/prepare/detectors/registry.py` and exported it through `vocra/core/prepare/detectors/__init__.py`, so detector backend selection now has one shared service path instead of separate CLI-only branching.
+- Updated `vocra/cli/prepare_cmd.py` to reuse the shared detector factory, keeping CLI and GUI detector selection aligned.
+- Added `vocra/app/prepare_run_service.py` as a dedicated GUI-facing Prepare run service that loads persisted `prepare_config.json`, validates run prerequisites, creates the detector backend, and calls the existing core `run_prepare(...)` orchestration without moving pipeline logic into GUI files.
+- Extended `vocra/app/models.py` and `vocra/app/__init__.py` with `PrepareRunOutcome` and the new run service export so GUI code can consume a thin result contract instead of core internals.
+- Extended `vocra/gui/prepare_tab.py` with the first `Run Prepare` control and a run-status line for the Prepare tab.
+- Extended `vocra/gui/main_window.py` so the GUI now persists current Prepare editor state before running, starts Prepare through `window.perform_long_operation(...)`, blocks project switching while a run is active, and refreshes Prepare summary/preview when the run completes.
+- Added `tests/unit/test_prepare_run_app_service.py` to cover GUI-facing Prepare run service behavior and prerequisite validation.
+- Recorded one failed attempt during this session: after extracting the shared detector factory, Ruff and unit tests caught a stale `_normalize_detector_name(...)` call plus several import-order issues; these were fixed before rerunning checks.
+- Ran Ruff, targeted Prepare run app/CLI tests, `vocra gui --help`, and the full `unittest` suite after the first GUI Prepare-run changes; all passed.
+- Updated `docs/progress.md` before coding so the next detailed Phase 15 goal explicitly moved from read-only crop overlay to the first interactive crop action on the preview.
+- Added service-level preview-selection mapping in `vocra/app/prepare_service.py`, so a preview-space drag rectangle can be validated, clamped, and converted back into original-video `CropZone` coordinates outside GUI files.
+- Added `vocra/gui/widgets/crop_canvas.py` and `vocra/gui/widgets/__init__.py` as the first reusable Prepare preview widget helpers, with a dedicated `PySimpleGUI.Graph` canvas plus normalized preview-selection handling instead of pushing that behavior directly into `main_window.py`.
+- Extended `vocra/gui/prepare_tab.py` so the preview panel now exposes an active-zone selector, drag/apply/clear selection controls, and selection-status messaging alongside the existing preview slider and crop inputs.
+- Extended `vocra/gui/main_window.py` so preview load/open/create flows reset selection state correctly, preview drag events stage a selection rectangle, and applying that selection updates Zone 0 or Zone 1 editor values without moving artifact writes into GUI code.
+- Extended `vocra/app/__init__.py` to export the new crop-selection helpers for the GUI-facing app layer.
+- Extended `tests/unit/test_prepare_app_service.py` with explicit preview-to-source coordinate mapping coverage and added `tests/unit/test_crop_canvas_widget.py` for normalized preview-selection behavior.
+- Recorded one failed attempt during this session: Ruff flagged import ordering in `vocra/gui/main_window.py` after the new widget imports were added; this was fixed before rerunning checks.
+- Ran Ruff, targeted Prepare interactive-crop tests, `vocra gui --help`, and the full `unittest` suite after the interactive-crop changes; all passed.
+- Updated `docs/progress.md` again before coding so the next detailed Phase 15 goal is explicit: add crop-zone persistence plus read-only overlay rendering through app/service boundaries.
+- Added `vocra/app/prepare_service.py` as a dedicated Prepare-tab app-service module for crop-zone artifact sync and preview overlay rendering, instead of growing `vocra/app/service.py` further.
+- Extended `vocra/app/models.py`, `vocra/app/service.py`, and `vocra/app/__init__.py` so GUI-facing state can carry persisted crop-zone editor state and keep `crop_zones.json` synchronized with `prepare_config.json`.
+- Extended `vocra/gui/prepare_tab.py` so the Prepare tab now includes crop-zone editor fields for two zones, crop-state metadata, and save/reload/clear actions.
+- Extended `vocra/gui/main_window.py` so the Prepare tab can load/save crop zones, reuse current crop values for preview overlay rendering, and resync summary/config state after crop-zone saves.
+- Added `tests/unit/test_prepare_app_service.py` and extended `tests/unit/test_app_service.py` so crop-zone artifact sync and preview overlay behavior are covered with fake captures and fake projects.
+- Recorded one failed attempt during this session: Ruff flagged import ordering in `vocra/app/prepare_service.py` and `vocra/gui/main_window.py` after the crop wiring; this was fixed before rerunning checks.
+- Ran Ruff, targeted crop/app/gui tests, `vocra gui --help`, and the full `unittest` suite after the crop-overlay changes; all passed.
+- Updated `docs/progress.md` again before coding so the next detailed Phase 15 goal is explicit: add a read-only video preview slice through core/app/service boundaries.
+- Added `vocra/core/video/preview.py` as the first dedicated source-video preview module, with seek-based frame loading, aspect-fit resizing, and PNG encoding for GUI use.
+- Extended `vocra/core/video/__init__.py`, `vocra/app/models.py`, `vocra/app/service.py`, and `vocra/app/__init__.py` so the app layer can load a read-only Prepare preview frame from project source video through a service boundary.
+- Extended `vocra/gui/prepare_tab.py` so the Prepare tab now includes a preview image panel, preview target slider, preview metadata, and read-only preview actions.
+- Extended `vocra/gui/main_window.py` so GUI project open/create now sync preview context from project duration plus Prepare start time, and the Prepare tab can load preview frames without owning decode logic.
+- Added `tests/unit/test_video_preview.py` and extended `tests/unit/test_app_service.py` so both the core preview loader and the app-level preview wrapper are covered with fake captures.
+- Recorded one failed attempt during this session: Ruff flagged import ordering in `vocra/gui/main_window.py` after the preview wiring; this was fixed before rerunning checks.
+- Ran Ruff, targeted preview/app/gui tests, `vocra gui --help`, and the full `unittest` suite after the Prepare-preview changes; all passed.
+- Updated `docs/progress.md` again before coding so the next detailed Phase 15 goal is explicit: add a persisted Prepare config panel through app/service boundaries.
+- Extended `vocra/app/models.py`, `vocra/app/service.py`, and `vocra/app/__init__.py` with a GUI-facing `PrepareConfigForm` plus load/save helpers for `prepare/prepare_config.json`.
+- Extended `vocra/gui/prepare_tab.py` so the Prepare tab now includes a persisted config panel for time range, SSIM, frame skip, detector name, width/brightness, subtitle position, and debug/full-frame flags.
+- Extended `vocra/gui/main_window.py` so the GUI can reload/save Prepare config, open `prepare/prepare_config.json`, and refresh Prepare summary after a config save.
+- Extended `tests/unit/test_app_service.py` so missing-config defaults and config-save persistence/preservation behavior are covered.
+- Recorded one failed attempt during this session: Ruff flagged `SIM118` in the first Prepare-config implementation because `dict.keys()` was used unnecessarily; this was fixed before rerunning checks.
+- Ran Ruff, targeted app/gui tests, `vocra gui --help`, and the full `unittest` suite after the Prepare-config changes; all passed.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Updated `docs/progress.md` before coding so the first detailed Phase 15 goal is explicit: add a read-only Prepare summary slice through app/service boundaries.
+- Added `vocra/gui/prepare_tab.py` as the first dedicated Prepare tab module.
+- Extended `vocra/app/models.py`, `vocra/app/service.py`, and `vocra/app/__init__.py` so GUI-facing app state can carry a Prepare-stage summary loaded from durable project artifacts.
+- Extended `vocra/gui/main_window.py` so the Prepare tab can show summary text, refresh it, open the Prepare folder, and open `prepare/subtitle_segments.jsonl`.
+- Extended `tests/unit/test_app_service.py` so the Prepare summary service is covered against the fixture project.
+- Recorded one failed attempt during this session: Ruff initially failed on import ordering after the Prepare-summary wiring; this was fixed before rerunning checks.
+- Ran Ruff, targeted app/gui tests, `vocra gui --help`, and the full `unittest` suite after the Prepare-tab summary changes; all passed.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Updated `docs/progress.md` before coding so the remaining detailed Phase 14 goal is explicit: add durable `recent projects` in the app layer.
+- Added `vocra/app/state.py` as the first app-global state persistence module, with a durable recent-project list stored outside project pipeline artifacts.
+- Extended `vocra/app/models.py`, `vocra/app/service.py`, and `vocra/app/__init__.py` so GUI-facing app state can expose recent projects and update them when a project is created or opened.
+- Extended `vocra/gui/project_tab.py` and `vocra/gui/main_window.py` so the Project tab now shows a recent-project list and supports reopening a selected recent project.
+- Added `tests/unit/test_app_state.py` and extended `tests/unit/test_app_service.py` to cover recent-project persistence and service wiring.
+- Recorded one failed attempt during this session: Ruff initially failed on import formatting plus one missing `Path` import while wiring recent projects; these were fixed before rerunning checks.
+- Ran Ruff, targeted app-state/app-service/gui tests, `vocra gui --help`, and the full `unittest` suite after the recent-project changes; all passed.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Updated `docs/progress.md` before coding so the next work is tracked as the first detailed Phase 14 Project-tab slice instead of more generic Phase 13 shell work.
+- Extended `vocra/app/models.py` and `vocra/app/service.py` so GUI-facing project state now includes source metadata, project metadata, project creation through the existing core service, and split rendering for project overview vs artifact status.
+- Added `vocra/gui/project_tab.py` as the first dedicated GUI tab module instead of keeping Project UI embedded in `main_window.py`.
+- Extended `vocra/gui/main_window.py` so the Project tab now supports create-project inputs, existing-project open, project-folder open, and clearer Project/Artifact panels while still calling app services only.
+- Extended `tests/unit/test_app_service.py` so GUI-facing project creation and richer project-overview rendering are covered.
+- Recorded one failed attempt during this session: Ruff initially failed on import ordering in `tests/unit/test_app_service.py`; this was fixed before rerunning checks.
+- Ran Ruff, targeted app/gui/project tests, `vocra gui --help`, and the full `unittest` suite after the Project-tab changes; all passed.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Updated `docs/progress.md` before the code changes so Phase 13 work is tracked explicitly against the detailed `docs/Plan.md` GUI shell goal.
+- Added `vocra/app/models.py`, `vocra/app/service.py`, and `vocra/app/__init__.py` as the first GUI-facing state/service boundary over existing project artifacts.
+- Added `vocra/gui/main_window.py` and `vocra/gui/__init__.py` with a minimal PySimpleGUI shell that can open an existing project folder and display a dashboard plus placeholder stage tabs.
+- Added `vocra/cli/gui_cmd.py` and wired `vocra gui` into `vocra/cli/main.py`.
+- Added `tests/unit/test_app_service.py` and `tests/unit/test_gui_cli.py` to cover dashboard/service behavior and GUI CLI wiring.
+- Ran Ruff, targeted GUI-shell tests, `vocra gui --help`, a GUI module import smoke check, and the full `unittest` suite after the Phase 13 shell changes; all passed.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Added `tests/unit/test_package_cli.py` with direct CLI coverage for `vocra package srt --review-state-policy ignore|require`.
+- Ran Ruff, targeted package/review tests, `vocra package srt --help`, and the full `unittest` suite after adding package CLI coverage; all passed.
+- Detailed Phase 12 from `docs/Plan.md` is now complete at the core/CLI level:
+  review artifacts are durable, review quality/filtering exists, review CLI surfaces exist, package respects edited/rejected review state, and tests cover accepted/edited/rejected behavior plus package review-state policy.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Added `save_review_batch(...)` in `vocra/core/review/service.py` so multiple review-state rows can be updated in one write, either from explicit `segment_id`s or from an existing review filter.
+- Extended `vocra/cli/review_cmd.py` with `vocra review batch-set` for bulk review-status updates from the CLI.
+- Extended `tests/unit/test_review_service.py` and `tests/unit/test_review_cli.py` to cover batch review updates through both the service and the CLI.
+- Ran Ruff, targeted review tests, `vocra review --help`, `vocra review batch-set --help`, and the full `unittest` suite after the batch-review changes; all passed.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Extended `vocra/core/package/service.py` with an explicit `review_state_policy` so package runs can auto-use, ignore, or require `review_state.jsonl`.
+- Extended `vocra/cli/package_cmd.py` with `--review-state-policy` so the package-stage review behavior is scriptable from the CLI.
+- Extended `tests/unit/test_srt_packager.py` to cover explicit review-state ignore/require behavior and to prove reviewed text can recover an OCR-error segment while keeping Prepare timing.
+- Extended `tests/unit/test_review_service.py` so review-item loading now has coverage for OCR-error quality flags.
+- Recorded one failed attempt during this session: the first package-review-policy implementation raised `NameError: ProjectWorkspaceError is not defined` and Ruff import-order failures in the updated tests; both were fixed before rerunning the suite.
+- Ran `ruff`, targeted review/package tests, `vocra package srt --help`, and the full `unittest` suite after the changes; all passed.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Added `vocra/core/review/models.py`, `vocra/core/review/quality.py`, `vocra/core/review/service.py`, and `vocra/core/review/__init__.py` as the first Review-layer core slice.
+- Added `vocra/cli/review_cmd.py` and wired `vocra review list` / `vocra review set` into `vocra/cli/main.py`.
+- Extended `vocra/core/package/service.py` so packaging now auto-loads `review_state.jsonl` from the selected OCR run, prefers edited review text, and blanks rejected segments without changing Prepare timing.
+- Added `tests/unit/test_review_service.py` and `tests/unit/test_review_cli.py`, and extended `tests/unit/test_srt_packager.py` to cover review-aware packaging.
+- Ran targeted review/package tests, CLI help checks, Ruff, and the full `unittest` suite after the Review-layer changes; all passed.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Completed the missing detailed Phase 11 CLI surface by adding `vocra prepare run` and wiring it into `vocra/cli/main.py`.
+- Added `vocra/core/prepare/similarity.py` with a reusable SSIM helper and fallback path so Prepare no longer depends on ad hoc test lambdas for its default CLI flow.
+- Extended `vocra/core/prepare/sampler.py` with legacy-style brightness masking before SSIM/detection and propagated that from `PrepareConfig` through project-backed sampling.
+- Extended `vocra/core/prepare/frame_filter.py`, `vocra/core/prepare/stitch.py`, `vocra/core/prepare/segmenter.py`, and `vocra/core/prepare/service.py` so coarse SSIM-skipped frames are merged into the kept frame span instead of silently shrinking subtitle timing.
+- Added `tests/unit/test_prepare_cli.py` and `tests/integration/test_prepare_to_package_fake_ocr.py`, then updated Prepare unit tests so the current end-to-end behavior is covered through core + CLI + package integration.
+- Recorded one failed attempt during this session: the first coarse-SSIM integration dropped frame-span timing for skipped frames, causing a Prepare full-run test to end too early at `1040ms`; this was corrected by carrying skipped frame indices through stitched placements and representative spans.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Added the first fuller `run_prepare(...)` orchestration slice in `vocra/core/prepare/service.py`, connecting project-backed sampling, stitched detection-grid batching, detector execution, detector-result mapping, representative selection, and final segment writing.
+- Extended `vocra/core/prepare/grids.py` with a helper to persist prepared detection-grid images to detector input paths.
+- Extended fake Prepare detector support so tests can optionally size boxes to the full saved grid image when needed.
+- Added and updated end-to-end synthetic Prepare tests, including one failed attempt where the first orchestration test expected multiple detections from a single-grid fake detector and was then revised to use explicit grid batching settings.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Extended `vocra/core/prepare/frame_filter.py` so representative batches now preserve `end_frame_idx`, `source_frame_indices`, source polygons, and union rects needed for final segment generation.
+- Added `vocra/core/prepare/segments.py` with timing-owned `SubtitleSegment` generation from representative batches, using frame timestamp maps and the legacy end-time fallback logic.
+- Extended `vocra/core/prepare/writer.py` so prepare runs can now write `subtitle_segments.jsonl` and persist final segment-named representative images alongside the earlier candidate/debug artifacts.
+- Extended `vocra/core/prepare/service.py` so the current durable prepare-run path now emits final subtitle segments whenever sampled-frame timing is available.
+- Added and updated unit tests for subtitle-segment generation and durable prepare-run segment artifacts; one expected timing value was corrected after the first test run to match the actual Prepare timing logic.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Added `vocra/core/prepare/grids.py` with detector-ready stitched-grid batching, canvas rendering, and layout/image lookup helpers built from sampled zone frames.
+- Extended `vocra/core/prepare/writer.py` so prepare runs now persist stitched detection-grid images under `debug/detection_grids/` and representative candidate images under `representative_images/`.
+- Extended `vocra/core/prepare/service.py` and `vocra/core/prepare/__init__.py` so prepare candidate selection can carry `PreparedDetectionGrid` artifacts through the existing Phase 11 flow.
+- Added and updated unit tests for stitched-grid batching and prepare-run image artifact writing, including a corrected failed expectation where the first grid-batching test underestimated the legacy batch-limit math.
+- Read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, and `docs/Plan.md`.
+- Confirmed `docs/progress.md` was missing at session start.
+- Inspected the current repository layout, `pyproject.toml`, `README.md`, and `_version.py`.
+- Created `docs/progress.md` with the required session-memory sections.
+- Added `vocra/__init__.py` and `vocra/cli/main.py`.
+- Added `tests/unit/test_cli_version.py`.
+- Updated `pyproject.toml` to declare `pytest` in the dev dependency group and set pytest test discovery.
+- Verified `python -m vocra.cli.main --version` works.
+- Verified `ruff check vocra tests` passes.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Added `vocra/core/project/schema.py` with `SourceVideo`, `ProjectMetadata`, `ProjectPaths`, and schema version constants.
+- Added `vocra/core/project/workspace.py` with `create_project`, `open_project`, `validate_project`, and `resolve_paths`.
+- Added `vocra/core/video/probe.py` with PyAV-based metadata probing and lightweight source fingerprinting.
+- Added `vocra/cli/project_cmd.py` and hooked it into `vocra/cli/main.py`.
+- Added and ran unit tests for project workspace creation/validation and the CLI version smoke test using stdlib `unittest`.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Added `vocra/core/project/manifest.py` with atomic JSON writes, JSON reads, schema checks, and required-field validation.
+- Added `vocra/core/project/jsonl.py` with append-friendly JSONL reads/writes and malformed-record validation.
+- Added `vocra/core/project/runs.py` with run-id generation and prepare/ocr/package run-folder creation helpers.
+- Updated `vocra/core/project/workspace.py` to use shared manifest utilities.
+- Added unit tests for JSONL behavior, manifest validation, and run-folder creation.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Added `vocra/core/prepare/models.py` with `CropZone`, `SubtitleSegment`, `DetectionBox`, and `PrepareSummary`.
+- Added `vocra/core/ocr/models.py` with `OcrInput`, `OcrOutput`, and `OcrRunSummary`.
+- Added `vocra/core/package/srt.py` with timestamp formatting, entry building, and SRT rendering.
+- Added `vocra/core/package/service.py` with minimal artifact-driven SRT packaging support.
+- Added `vocra/cli/package_cmd.py` and hooked `vocra package srt` into the CLI.
+- Added a fixture project under `tests/fixtures/projects/simple.vocra/` with prepared segments and normalized OCR output.
+- Added unit tests for segment contract round-trip and SRT packaging behavior.
+- Verified `vocra package srt` works end-to-end on the fixture project.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Added `vocra/core/ocr/backends/base.py` with the base OCR backend protocol and backend test result contract.
+- Added `vocra/core/ocr/backends/fake.py` with a deterministic fake OCR backend plus simulated empty/error cases.
+- Added `vocra/core/ocr/registry.py` with backend registration and backend creation helpers.
+- Added `vocra/core/ocr/service.py` with artifact-driven OCR orchestration, OCR run creation, resume behavior, and OCR artifact writing.
+- Added `vocra/cli/ocr_cmd.py` and hooked `vocra ocr run` into the CLI.
+- Added placeholder representative image fixtures under `tests/fixtures/projects/simple.vocra/prepare/representative_images/`.
+- Added unit tests for the fake backend and OCR service flow, including resume and package integration.
+- Verified `vocra ocr run --backend fake` works from the CLI and can feed `vocra package srt`.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Added `vocra/core/ocr/backends/openai_compatible.py` with request building, image base64/data-url encoding, response parsing, and timeout/error handling.
+- Registered `openai-compatible-vision` in `vocra/core/ocr/registry.py`.
+- Extended `vocra/cli/ocr_cmd.py` with `--config`, endpoint/model/prompt/temperature/max-token/timeout options, and config merge behavior.
+- Updated OCR service raw-output writing so `raw_outputs.jsonl` always records the configured backend name.
+- Added unit tests for the OpenAI-compatible backend using a local mock HTTP server, including request payload shape, test_connection, timeout behavior, raw output preservation, and CLI config-file support.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Added `vocra/core/ocr/backends/ollama.py` with Ollama request building, image base64 encoding, response parsing, default endpoint handling, and timeout/error handling.
+- Registered `ollama` in `vocra/core/ocr/registry.py`.
+- Updated `vocra/core/ocr/backends/__init__.py` to export the Ollama backend.
+- Updated `vocra/cli/ocr_cmd.py` help text so the shared HTTP backend flags describe both OpenAI-compatible and Ollama usage.
+- Added unit tests for the Ollama backend using a local mock HTTP server, including request payload shape, test_connection, raw response preservation, and per-segment error recording via the existing OCR service.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Added `vocra/core/ocr/backends/local_command.py` with safe local command execution, placeholder validation, timeout handling, stdout normalization, and stderr/raw preservation.
+- Registered `local-command` in `vocra/core/ocr/registry.py`.
+- Updated `vocra/core/ocr/backends/__init__.py` to export the local-command backend.
+- Extended `vocra/cli/ocr_cmd.py` with local-command options for `--command-template`, `--stdout-format`, and `--working-dir`.
+- Added unit tests for the local-command backend, including mocked subprocess behavior through a temporary Python script, timeout handling, raw stderr preservation, and CLI config-file support.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Added `legacy/extracted_algorithms.md` with a first extraction map from legacy VideOCR Prepare logic into target VOCra modules, invariants, and test ideas.
+- Added `vocra/core/video/timestamps.py` with legacy-style time parsing, SRT timestamp formatting, and subtitle timing reconstruction helpers.
+- Added `vocra/core/prepare/crop.py` with pure crop-zone validation/defaulting and crop/scale planning helpers extracted from the legacy Prepare path.
+- Added `vocra/core/prepare/stitch.py` with stitched-grid layout mapping, capacity calculation, and polygon unstitch helpers extracted from the legacy Prepare path.
+- Updated `vocra/core/video/__init__.py` and `vocra/core/prepare/__init__.py` to export the new utility modules.
+- Added unit tests for timestamp helpers, crop planning helpers, and stitch-grid helpers.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Added `vocra/core/prepare/detectors/base.py` with the Prepare detector backend protocol and `DetectionGridResult` contract.
+- Added `vocra/core/prepare/detectors/fake.py` with a deterministic fake text detector backend for tests and synthetic prepare flows.
+- Added `vocra/core/prepare/detectors/paddle.py` with a Paddle text-detection backend boundary, command builder, and parser for `dt_polys`/`dt_scores` output.
+- Added `vocra/core/prepare/detectors/__init__.py` to export detector contracts and backends.
+- Added a Paddle text-detection parser fixture under `tests/fixtures/detectors/paddle_text_detection.jsonl`.
+- Added unit tests for the fake detector backend and Paddle detector parser/backend behavior.
+
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Added `vocra/core/prepare/segmenter.py` with extracted line-rect grouping, normalized layout similarity, and frame-layout grouping helpers.
+- Added `vocra/core/prepare/frame_filter.py` with representative-frame selection logic that keeps timing anchored to the earliest frame in a contiguous batch while allowing a higher-score source image to represent that batch.
+- Added `vocra/core/prepare/service.py` with a small Prepare-side orchestration slice for mapping stitched detector outputs back to per-frame polygons and selecting representative candidates from grid images.
+- Updated `vocra/core/prepare/__init__.py` to export the new Prepare grouping/filter dataclasses.
+- Added unit tests for layout grouping, representative-frame filtering, and the detector-output-to-candidate orchestration path.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Added `vocra/core/prepare/config.py` with the first `PrepareConfig` contract and JSON-friendly round-trip behavior.
+- Added `vocra/core/prepare/writer.py` with a durable prepare-run writer for `prepare_config.json`, `detection_boxes.jsonl`, `frame_index.jsonl`, `representative_candidates.jsonl`, and `run_report.json`.
+- Expanded `vocra/core/prepare/service.py` with `PrepareCandidateSelection`, `PrepareRunResult`, and `run_prepare_candidate_selection(...)` for a minimal PrepareService-style flow that creates a prepare run and writes candidate artifacts.
+- Extended `vocra/core/prepare/models.py` with `PrepareRunSummary`.
+- Updated `vocra/core/prepare/__init__.py` to export `PrepareConfig`, `PrepareCandidateSelection`, `PrepareRunResult`, and `PrepareRunSummary`.
+- Added unit tests for prepare config round-trip, prepare artifact writing, and durable prepare-run creation against a synthetic detector/grid scenario.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Added `vocra/core/prepare/sampler.py` with synthetic-friendly frame sampling, subtitle-position SSIM samples, frame timestamp mapping, and average frame-duration reconstruction.
+- Updated `vocra/core/prepare/writer.py` so prepare runs now also write `timeline.jsonl` and can carry `timestamp_ms` into `frame_index.jsonl` when sampled-frame timing is available.
+- Updated `vocra/core/prepare/service.py` so `run_prepare_candidate_selection(...)` can accept sampled frames and propagate timing-aware artifacts into the prepare run.
+- Extended `vocra/core/prepare/models.py` so `PrepareRunSummary` now reports `sampled_frame_count`.
+- Updated `vocra/core/prepare/__init__.py` to export the new sampler dataclasses.
+- Added unit tests for sampling modulo behavior, subtitle-position SSIM sampling, synthetic frame sampling, and timestamp reconstruction behavior.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Added `vocra/core/video/capture.py` with a `VideoCapture` protocol, `PyAvVideoCapture`, and `open_video_capture()` as the first decoder-backed capture boundary extracted from the legacy PyAV adapter.
+- Extended `vocra/core/prepare/sampler.py` with `sample_video_capture(...)`, letting Prepare sampling operate against a decoder-backed capture while preserving legacy seek/start-offset/frame-skip semantics.
+- Updated `vocra/core/video/__init__.py` to use lazy exports so the new capture boundary does not create import cycles with project/workspace probing.
+- Updated `vocra/core/prepare/__init__.py` to export `sample_video_capture`.
+- Added unit coverage for decoder-backed sampler semantics using a fake capture object.
+- Re-read `docs/Design.md`, `docs/Agent.md`, `docs/Product.md`, `docs/Plan.md`, and `docs/progress.md` at the start of this session.
+- Expanded `vocra/core/prepare/service.py` with `PrepareSamplingResult` and `sample_project_video(...)`, connecting project metadata, crop-zone resolution, crop render planning, and decoder-backed sampling into one Phase 11 service step.
+- Updated `vocra/core/prepare/__init__.py` to export `PrepareSamplingResult` and `sample_project_video`.
+- Added unit coverage for project-backed sampling with a fake capture context and real project metadata.
+
+## In Progress
+
+- No additional code change is actively in progress after completing the in-folder launcher fix and rerunning the main checks.
+- Interactive GUI smoke validation still remains before the project can honestly claim a polished standalone VOCra workflow.
+- Broader Phase 20 polish still remains: settings, app icon, project migration checks, crash-log/release packaging work, and more end-user-facing docs.
+
+- No additional Phase 18 code change is actively in progress after completing the Package-tab acceptance pass and rerunning the suite.
+- The honest current implementation target is no longer Package completion; it is interactive smoke validation for the completed OCR/Review/Package tabs and then Phase 19 OCR run comparison.
+- Interactive GUI smoke validation is still in progress conceptually across OCR/Review, because current confidence is still mostly structural/unit coverage plus `vocra gui --help`.
+- Detailed Phase 16 now has backend-aware config behavior, GUI backend testing, and explicit resume/rerun actions in place; the remaining work is mostly run-list visibility, target-run UX, and broader smoke validation.
+- Current implementation target has moved again: make OCR run selection/visibility explicit in the GUI so resume/rerun is less dependent on manually typing a run id when multiple runs exist.
+- Detailed Phase 16 is now moving from the first generic OCR launch slice to the next OCR-tab slice: backend-aware config behavior and a GUI `Test Backend` path through app/core services.
+- The first narrow detailed Phase 16 OCR GUI slice now exists, but it still needs follow-up work for broader backend-specific config UX, resume/test-connection controls, and stronger GUI smoke validation of the end-to-end OCR run path.
+- The current OCR GUI defaults are intentionally biased toward the fake backend first; richer config affordances for OpenAI-compatible, Ollama, and local-command backends are still ahead.
+- Detailed Phase 16 has now started with a narrow first slice: add dedicated GUI/app OCR tab plumbing that reads durable OCR context from project artifacts and starts OCR runs through services rather than through `main_window.py`.
+- The immediate implementation target is fake-backend OCR from the GUI first, with prepare-run selection, backend basics, run status, and artifact visibility, before broader backend config and resume/test-connection polish.
+- No repair slice is actively in progress after fixing the reported Project/Prepare GUI regressions in this session.
+- The next detailed phase to start is Phase 16 GUI OCR tab, which still needs prepare-run selection, backend selection, backend config editing, run/resume controls, and OCR-run artifact visibility through GUI services.
+- Stronger stop behavior during long detector calls and richer Prepare progress polish may still be worthwhile later, but the first priority after these repair passes is Phase 16 rather than more Prepare-tab polish.
+- Decide when to expose backend `test_connection` from the CLI without fragmenting the current command surface.
+- Decide when to migrate packaging metadata from legacy VideOCR toward VOCra naming without breaking current expectations.
+- Extend the new GUI shell without pulling pipeline logic into GUI files.
+
+## Not Started
+
+- Phase 20 polish and packaging work from `docs/Plan.md`.
+- Later detailed polish/release phases after Package and OCR comparison.
+
+## Blockers / Risks
+
+- OCR run comparison now tolerates runs whose prepare-run metadata is missing, which is necessary for current legacy/minimal artifacts but means run eligibility can be less strict until more runs consistently record `input_prepare_id`.
+- Phase 19 is complete at the current code/test level, but the compare flow still lacks an automated or scripted live GUI smoke test; current confidence for the UI interaction path is still based on unit coverage plus command-surface verification rather than browser-style GUI automation.
+- Detailed Phase 18 is complete at the current code/test level, but the Package tab still lacks an automated or scripted interactive smoke test; current confidence is still structural/unit coverage plus `vocra gui --help`.
+- The current Package GUI selects review behavior through `review_state_policy` tied to the chosen OCR run, not by browsing arbitrary review artifacts; this matches the current core contract but may need revisiting if explicit review-source selection becomes a product requirement.
+- Detailed Phase 16 is complete at the current code/test level, but the GUI still lacks an automated or scripted interactive OCR-tab smoke test; the current confidence level still depends mainly on unit tests plus `vocra gui --help`.
+- Detailed Phase 17 is complete at the current code/test level, but the GUI still lacks an automated or scripted interactive Review-tab smoke test; shortcut routing, table selection highlight behavior, and in-tab image rendering have not yet been exercised in a live GUI automation path.
+- `docs/Plan.md` contains a numbering mismatch between the short phase overview and the later detailed phase sections. Progress tracking in this file is following the later detailed sections, and this session now records Prepare as completed under detailed Phase 11 rather than the earlier overview numbering.
+- The workspace is not a Git checkout here, so `git status` cannot be used for change tracking in this session.
+- The repository still centers on the legacy `VideOCR.py` monolith; migration needs to happen incrementally to avoid breaking valuable prepare logic.
+- Packaging metadata still describes the old VideOCR app, so migration to VOCra distribution metadata should be handled carefully.
+- `pytest` is still not installed in the current environment, so the suite currently relies on `python -m unittest` even though `pyproject.toml` already declares pytest for the intended toolchain.
+- PySide6 is not installed in the current environment, while `PySimpleGUI` already exists in repo dependencies, so the first GUI shell uses PySimpleGUI for the smallest useful Phase 13 slice.
+- The GUI work has still not been verified through an automated interactive smoke test, and this session confirmed multiple times that structural/unit coverage alone was not enough to catch practical GUI regressions.
+- Detailed Phase 15 acceptance is now met at the current code/test level, but Prepare stop remains cooperative rather than forceful during long detector commands, and the GUI still lacks an automated interactive smoke test.
+
+## Architecture Decisions
+
+- Phase 19 compare is now anchored inside the existing Review workflow instead of adding a brand-new top-level stage: the currently selected Review OCR run is the target run, compare candidates come from multiple OCR runs for the same Prepare source, and the winner writes back into that target run's `review_state.jsonl`.
+- Compare CLI parity lives under `vocra review` rather than a brand-new command group. The compare workflow is treated as a Review-layer operation because it ultimately chooses text overrides for Review/Package, not OCR timing or OCR backend execution.
+- Review compare refresh is narrower than Review refresh: changing compare source-run selection updates compare state only, while changing prepare/ocr/filter context still refreshes the whole Review summary. This avoids wiping in-progress Review edits just because the user is exploring compare candidates.
+- Phase 19 comparison is starting in the app/service layer, not the GUI: compare-run loading and winner persistence now live in `vocra/app/ocr_compare_service.py`, which keeps OCR comparison artifact-driven, testable, and ready for either GUI or CLI surfaces without putting comparison rules into widgets.
+- Compare winner selection writes back into the target OCR run's existing `review_state.jsonl` instead of creating a new compare artifact type for now. This keeps packaging unchanged because Package already knows how to join Prepare timing with OCR text plus review-state overrides.
+- OCR comparison currently accepts runs with missing `input_prepare_id` metadata unless another selected run explicitly contradicts them on prepare source. This preserves compatibility with older/minimal OCR artifacts while the project continues migrating toward stricter run metadata.
+- The completed Phase 18 Package GUI keeps `review state` selection aligned with the current artifact contract: users choose an OCR run plus review-state behavior (`auto` / `ignore` / `require`), and the package layer resolves that OCR run's `review_state.jsonl` instead of introducing a second free-floating review artifact selector.
+- Package output-folder opening is resolved in the app layer, not the GUI: explicit output path wins, then selected/latest package run output, then the project package-runs directory; this keeps filesystem path resolution out of widgets while matching the user's packaging intent.
+- Package preview is now a first-class core capability rather than GUI-local logic: `vocra/core/package/service.py` exposes a non-writing preview path that uses the same Prepare/OCR/Review join rules as export, so the GUI can preview SRT without duplicating packaging behavior or creating fake artifacts.
+- The first Package GUI slice follows the same boundary used by OCR and Review: `vocra/app/package_service.py` owns artifact discovery plus preview/export wrappers, while `vocra/gui/package_tab.py` only renders controls, tables, and preview text.
+- The current Package GUI keeps review selection at the existing core contract boundary: users choose an OCR run plus `review_state_policy`, and the package layer resolves that OCR run's `review_state.jsonl` rather than letting widgets browse or rewrite review artifacts directly.
+- Review evidence is now loaded on demand through app services instead of being embedded in `ReviewStageSummary`: image preview bytes and raw OCR output are selection-level details, while the summary stays lightweight and artifact-index oriented.
+- Review GUI batch actions reuse core `save_review_batch(...)` through a narrow app-layer wrapper keyed by the current filter, so GUI widgets still do not reimplement filter semantics or mutate `review_state.jsonl` directly.
+- Review keyboard shortcuts are intentionally gated to the active Review tab before remapping to save/status/navigation actions, reducing cross-tab interference from global key bindings in the current PySimpleGUI shell.
+- Missing or fixture-level invalid Review evidence is treated as a recoverable UI condition: representative-image preview can be blank, and missing `raw_outputs.jsonl` renders an explanatory fallback message instead of failing the Review tab.
+- The first GUI Review slice follows the same boundary used by OCR and Prepare: `vocra/app/review_service.py` owns artifact reads/writes plus default run/filter resolution, while `vocra/gui/review_tab.py` only renders selectors and editor fields and sends save intents back through services.
+- Review GUI saves now reuse the existing core `save_review_edit(...)` behavior through a narrow app-layer wrapper instead of letting `main_window.py` or widgets mutate `review_state.jsonl` directly.
+- Review item image paths are resolved in the app layer against the selected prepare run, so the GUI does not need to understand whether representative images came from `prepare_default` or a future prepare run folder.
+- OCR backend connection probing is now a shared backend capability surfaced in both GUI and CLI: GUI still goes through `vocra/app/ocr_run_service.py`, while CLI now exposes `vocra ocr test-backend`; both rely on backend `test_connection(...)` plus the same OCR config contract instead of inventing separate probe implementations.
+- OCR-tab presentation helpers can be extracted into tiny pure functions when that improves testability, but artifact parsing and OCR run discovery still stay in the app layer; this session only extracted selected-run line formatting, not artifact ownership.
+- OCR run-status polish stays artifact-derived in the app layer: `edited_count` comes from `review_state.jsonl`, and `created_label` is derived from timestamp-shaped OCR run ids, so the GUI table still does not invent or own run metadata.
+- The OCR runs table now prioritizes the product-facing status columns (`OK`, `Empty`, `Error`, `Edited`, `Created`) while selected-run details continue to show prepare/config paths outside the table; this keeps the table compact without hiding artifact context completely.
+- Selected-run config reuse remains an app-layer responsibility: GUI requests `load_ocr_config_form_for_run(...)`, while the app layer reads `ocr_config.json`, maps it back into `OcrConfigForm`, and reapplies backend defaults before the widget updates.
+- OCR table selection and saved-config loading are intentionally separate actions: selecting a run targets it for resume/rerun and artifact opening, while loading config is explicit so the GUI does not silently overwrite the user's current OCR form edits.
+- OCR run presentation remains artifact-driven in the app layer: `vocra/app/ocr_service.py` now summarizes optional model metadata and exposes run lookup by `run_id`, so GUI tables and selected-run actions still do not read run folders directly.
+- OCR artifact-open actions now prefer the GUI-selected OCR run, falling back to the latest run only when no selection exists; this keeps inspection aligned with the user's explicit target run without changing OCR timing or overwrite semantics.
+- OCR rerun controls continue to reuse the core `run_ocr(...)` artifact contract instead of inventing separate GUI mutation logic; `Resume Failed Only` stays on the existing resume path, and `Rerun Empty Only` is implemented as a narrow extension that only selects empty latest rows for reprocessing.
+- OCR rerun actions validate their target run in the app layer against summarized OCR artifacts before delegating to the core service, so GUI widgets still do not inspect run folders directly and backend/timing ownership stays unchanged.
+- OCR backend-specific GUI behavior is now described in the app layer as backend form specs plus default-application helpers, so the GUI only enables/disables fields and renders help text rather than owning backend requirements itself.
+- GUI `Test Backend` now calls a dedicated app service that reuses the core backend registry plus backend `test_connection(...)` contracts, keeping OCR connection probing consistent with the non-GUI backend architecture.
+- The OCR GUI form now includes explicit `local-command` fields instead of pretending every backend fits the original generic endpoint/model form, which better matches the backend-agnostic design in `docs/Design.md` and `docs/Plan.md`.
+- The first OCR GUI slice reads both prepare-run choices and OCR-run summaries directly from durable project artifacts through `vocra/app/ocr_service.py`, so the GUI never inspects JSONL/config files itself and stays aligned with the artifact-driven rule.
+- GUI OCR execution now goes through `vocra/app/ocr_run_service.py`, which validates the chosen prepare artifacts, builds backend config from a GUI form, and then delegates to the existing core `run_ocr(...)` orchestration; this avoids inventing a second OCR execution path in GUI code.
+- The first OCR tab deliberately exposes a narrow generic config surface plus artifact-open actions, with fake backend as the easiest path, rather than trying to fully solve every backend-specific UX detail in one pass and risking a new GUI monolith.
+- Visual crop editing now follows a staged-selection model: GUI stages either a fresh drag selection or an existing persisted zone on the preview, then app/widget helpers handle move/resize math in preview space before converting back to original video coordinates on apply.
+- Existing crop zones are restaged from the editor values through `preview_selection_for_zone_spec(...)`, so visual editing reuses the same persisted zone specs the user will later save instead of inventing a second GUI-only crop source of truth.
+- Prepare stop support is now cooperative rather than forceful: GUI sets a cancellation flag, and core Prepare checks that flag inside sampling plus at safe stage checkpoints instead of trying to kill worker threads from the UI.
+- Because detector backends may run as long external commands, first-pass stop support does not guarantee instant cancellation during a detector call; the current contract is “stop at the next safe checkpoint,” which is safer for artifact integrity.
+- Prepare progress now crosses layers as a typed event path: core emits `ProgressEvent`, app maps that to `PrepareRunProgress`, and GUI only renders those app-facing updates.
+- The first GUI Prepare progress/log slice uses `window.write_event_value(...)` from the background Prepare task so the shell stays responsive without giving GUI code direct access to pipeline internals or thread control.
+- GUI `Run Prepare` now persists the current Prepare editor state first, then runs the existing core Prepare pipeline from that durable config, so GUI execution stays aligned with artifact-driven behavior instead of inventing a separate in-memory run path.
+- The first GUI `Run Prepare` slice uses `window.perform_long_operation(...)` to keep the PySimpleGUI shell responsive while core Prepare runs in the background, even though stop/progress polish is still missing.
+- Detector backend creation now lives in a shared Prepare detector registry, so CLI and GUI do not drift into different backend-selection rules.
+- The first interactive crop slice uses a dedicated preview-canvas helper module plus app-service coordinate mapping, so GUI event handlers only move preview points around while original-video coordinate math remains testable outside widgets.
+- Interactive crop currently updates the zone editor fields first and still relies on the existing save path to persist artifacts, which keeps `prepare_config.json` and `crop_zones.json` writes centralized instead of creating a second GUI-only write path.
+- Crop-zone persistence now writes both `prepare/prepare_config.json` and `prepare/crop_zones.json`, so the GUI slice stays aligned with the durable artifact model in `docs/Design.md` instead of storing crop state only in widgets.
+- The first crop slice uses simple zone-spec text inputs and read-only overlay rendering, because original-to-preview coordinate mapping belongs in services first; interactive drag/resize can build on the same path later.
+- Prepare crop app logic now lives in `vocra/app/prepare_service.py` instead of extending `vocra/app/service.py`, because the latter had already grown well beyond the soft size guideline in `docs/Agent.md`.
+- Read-only video preview now lives in `vocra/core/video/preview.py` and is surfaced through app services, so future crop widgets can reuse the same frame-loading path without pulling decode logic into GUI files.
+- The first preview slice deliberately returns both original frame size and fitted preview size, because original-to-preview coordinate mapping is a Prepare-tab requirement that later crop editing will need.
+- Preview loading is on-demand from the GUI instead of eager during project open, so missing videos or PyAV decode issues do not block the rest of the shell from opening existing artifact state.
+- Prepare config editing goes through a GUI-facing `PrepareConfigForm` in the app layer, so widgets only move strings/bools while parsing, validation, and file writes stay out of GUI files.
+- Saving Prepare config intentionally merges edits onto the existing parsed `PrepareConfig` payload so fields without GUI controls yet, such as `crop_zones` and detector-specific options, are preserved instead of being silently overwritten.
+- Invalid `prepare/prepare_config.json` should not block the whole GUI shell from opening a project; `open_project_state(...)` now keeps the project loadable and surfaces the config problem through `AppState.error_message`.
+- The first Prepare-tab slice is read-only and artifact-backed on purpose: GUI reads Prepare summary through app services before any preview/crop/run controls are introduced, which keeps Phase 15 aligned with the service-first rule.
+- Opening the Prepare folder and segment manifest from the GUI is treated as a thin integration layer around existing artifacts, not a replacement for later preview/config/run behavior.
+- Recent-project history now lives in an app-global state file (`%APPDATA%/VOCra/app_state.json` on Windows, `~/.vocra/app_state.json` elsewhere) rather than in per-project pipeline artifacts, because `recent projects` is GUI/app state rather than project/Prepare/OCR/package state.
+- Opening or creating a project through the GUI now updates recent-project history through the app layer, while core project workspace code remains focused on durable project artifacts only.
+- The first dedicated Project tab is now split into `vocra/gui/project_tab.py`, while project loading/creation and artifact-summary building remain in `vocra/app/service.py`; this keeps GUI files from becoming the new monolith.
+- Source-video metadata and artifact-stage summary are rendered through separate app-service helpers so the GUI can present a clearer Project view without parsing manifests itself.
+- The Project-tab `Open Project Folder` action is treated as a GUI integration action, while project creation/opening still goes through the shared core/app service path.
+- The first GUI shell reads durable artifact state only through `vocra/app/service.py`; GUI files do not inspect JSONL manifests directly or own pipeline logic.
+- The initial GUI shell uses PySimpleGUI instead of PySide6 because PySimpleGUI is already available in the current repo environment and the detailed Phase 13 goal is a minimal shell, not the final long-term GUI implementation.
+- Direct CLI coverage now exists for package review-state policy, so the Review-layer contract is tested both through core services and through the user-facing CLI surfaces that Phase 12 depends on.
+- Batch review updates now go through a single ReviewService write path, so bulk accept/reject operations still produce one durable `review_state.jsonl` artifact instead of a series of ad hoc per-segment writes.
+- `vocra review batch-set` intentionally only supports bulk status updates plus shared notes for now; per-segment custom text editing remains a single-segment operation so the contract stays simple and auditable.
+- Package now treats review-state usage as an explicit policy (`auto`, `ignore`, `require`) instead of an always-on hidden behavior, which matches the product goal that users can inspect and control each stage.
+- Reviewed text is allowed to override an OCR row whose normalized status is `error`, but only as text replacement keyed by `segment_id`; timing still comes only from the prepared segment manifest.
+- Review state now lives inside each OCR run as `ocr/runs/<run_id>/review_state.jsonl`, preserving the artifact-driven model where review is tied to OCR text but still separate from Prepare timing.
+- Package now treats review artifacts as optional text overrides keyed by `segment_id`: `edited` / `accepted` rows replace OCR text, `rejected` rows blank text, and timing still comes only from Prepare.
+- The first Review CLI surface is intentionally small (`list` and `set`) so the core review artifact contract is proven before adding GUI or bulk-edit behavior.
+- `vocra prepare run` now uses a reusable Prepare-side similarity helper by default instead of requiring callers to inject a test lambda; this keeps the CLI usable while preserving backend-agnostic OCR boundaries.
+- Coarse SSIM skipping was wired into `run_prepare(...)` only after span propagation was added. Skipped frames now extend the kept tile's `source_frame_indices` and downstream `end_frame_idx`, so Prepare keeps timing ownership without reverting to naive OCR-every-frame logic.
+- The current Prepare service now has an explicit `run_prepare(...)` orchestration slice that stays artifact-driven end to end, but it still keeps detector backend choice, capture factory, and similarity function injectable so the core remains testable without the GUI or a real OCR/detector install.
+- Detection-grid batching settings are now allowed to flow from `PrepareConfig.detector` into `run_prepare(...)`, which keeps orchestration configurable for tests and future CLI usage without hard-coding a second parallel grid-config surface.
+- Reporting progress now explicitly follows the detailed phase sections in `docs/Plan.md` when they conflict with the overview table, because the detailed section names are the only ones that match the actual Prepare/OCR/GUI task breakdown already implemented in the repo.
+- Representative batches now carry the frame span and detection metadata needed to build final `SubtitleSegment` artifacts without re-deriving timing or boxes later in OCR/package stages.
+- Prepare segment generation currently uses the representative batch start/end frame span plus the existing frame timestamp map and average-frame-duration fallback, preserving the rule that Prepare owns timing.
+- Prepare now treats stitched detector grids as first-class artifacts: they are built from sampled zone frames before detection, and prepare runs persist both the grid images and the cropped representative candidate images so later debugging/review does not depend on in-memory arrays.
+- Representative candidate manifests may now include a stable relative `image_path` when a corresponding representative image was materialized inside the prepare run, preserving inspectability without giving OCR ownership of timing.
+- Keep the legacy VideOCR code in place as a reference and algorithm source while building VOCra as a separate package tree.
+- Start with Phase 1 bootstrap work in `vocra/` instead of editing the legacy GUI/CLI directly.
+- Reuse the existing `_version.py` for the first VOCra CLI scaffold so the new package can report a stable version without introducing a second version source.
+- Phase 2 project creation writes durable on-disk workspace structure immediately, including `project.json`, `source/source_ref.json`, and `logs/app.log`.
+- The initial source probe uses PyAV for real video metadata and a lightweight file fingerprint so project creation stays aligned with the artifact-driven design.
+- Tests were adapted to `unittest` so they can run even when `pytest` is not installed in the environment yet.
+- Shared JSON manifest and JSONL utilities now live under `vocra/core/project/` so later stages can reuse the same atomic-write and validation behavior instead of re-implementing file IO per stage.
+- `prepare/runs/` is now reserved in the workspace layout for future prepare reruns, even though the top-level `prepare/` directory still exists for the current default artifact path.
+- Run IDs currently use timestamp plus microseconds and a sanitized stage-specific suffix to keep folder names readable while remaining unique enough for local use.
+- The initial package service treats `prepare_default` as the top-level `prepare/subtitle_segments.jsonl` artifact and resolves named OCR runs from `ocr/runs/<run_id>/normalized_text.jsonl`.
+- Packaging currently uses only prepared timing plus normalized OCR text, preserving the rule that OCR does not influence subtitle timing.
+- Package runs always create a fresh run directory and write both `package_config.json` and `package_report.json`, even when the final `.srt` is also written to an explicit external output path.
+- OCR backends do not write project artifacts directly; `vocra/core/ocr/service.py` owns writing `ocr_config.json`, `raw_outputs.jsonl`, `normalized_text.jsonl`, `errors.jsonl`, and `run_report.json`.
+- OCR resume now skips segments that already have non-error normalized output, but still reruns segments that previously recorded `status == "error"`.
+- OCR service creates empty JSONL artifact files up front so a run still leaves behind the expected artifact set even when there are zero errors or zero newly processed segments.
+- The OpenAI-compatible backend currently targets the Chat Completions style API and sends one user message containing text plus a `data:` image URL, which fits local llama.cpp/OpenAI-compatible vision endpoints without coupling the service to a specific provider SDK.
+- OCR CLI config loading now merges a plain JSON config file with explicit CLI flags, with CLI values taking precedence.
+- Raw OCR artifact rows now always store the configured backend name separately from the backend response payload so downstream inspection does not depend on response-specific fields.
+- The Ollama backend uses the same OCR service contract and writes no artifacts directly; it posts to `/api/chat`, preserves the full raw response, and returns normalized text from `message.content`.
+- Shared CLI flags such as `--endpoint`, `--model`, `--prompt-template`, `--temperature`, and `--timeout-sec` are intentionally reused across multiple HTTP OCR backends instead of creating backend-specific command surfaces too early.
+- The local-command backend also uses the same OCR service contract and writes no artifacts directly; it returns normalized text to the service while preserving command, stdout, stderr, and timeout/error details in raw output.
+- Local-command execution keeps `shell=False` and validates allowed template placeholders before running, so OCR tool integration stays generic without opening an unnecessary command-injection surface.
+- Local-command configs may use either a string template or a tokenized list template; list templates are currently the safest path for Windows-friendly config-file usage and testing.
+- Legacy Prepare extraction is now starting with pure helpers only, before any threaded video/decode orchestration is moved. This keeps the first Prepare migration steps testable without pulling GUI, OCR recognition, or PyAV worker pipelines into the new service layer.
+- Subtitle timing reconstruction helpers now live outside the legacy `Video` class so Prepare timing logic can be tested independently from OCR and packaging.
+- Stitch-grid mapping is being extracted as geometry/layout code first, leaving image IO and threaded writer concerns for later phases.
+- Prepare detector backends now have their own package and contract, separate from OCR backends, so text-box detection can stay swappable without coupling Prepare to a specific detector CLI.
+- The first Paddle detector adapter is intentionally limited to command construction and output parsing; detector orchestration still belongs to future `PrepareService`, not the backend itself.
+- Fake detector output is deterministic and filesystem-based so later prepare integration tests can use it without a real OCR/detector installation.
+- Prepare layout grouping and representative-frame filtering are being extracted as separate pure modules before a full PrepareService lands, so geometry, similarity, and timing-sensitive logic can be tested without video decode orchestration.
+- Representative-frame selection preserves legacy timing intent by keeping the batch `frame_idx` on the earliest frame in a contiguous similar block, while allowing `source_frame_idx` to point at the highest-confidence frame image inside that block.
+- The new representative-frame filtering path accepts an injected crop-similarity function instead of hard-coding `fast_ssim`, which keeps the logic backend-agnostic and easy to test with synthetic image arrays before the legacy similarity stack is fully migrated.
+- The first durable Prepare run slice writes intermediate candidate artifacts into `prepare/runs/<run_id>/` without pretending that final subtitle segments already exist; this keeps run durability moving forward without violating timing ownership.
+- `PrepareConfig` now exists as a dedicated contract separate from ad-hoc dicts so later CLI/GUI/config-file work can target a stable schema before real video sampling is wired in.
+- The minimal PrepareService entrypoint currently persists detection boxes, frame index rows, and representative candidates, but intentionally stops short of writing `subtitle_segments.jsonl` until real frame/timestamp ownership is connected.
+- The first sampler boundary is intentionally synthetic-friendly and pure: it defines the shape of frame sampling, crop extraction, SSIM sample extraction, and timestamp mapping without entangling the new Prepare service with PyAV threading too early.
+- Prepare run artifacts now write `timeline.jsonl` separately from detector-derived `frame_index.jsonl`, so later decoder-backed sampling can grow without having to redesign the already-written run folder contract.
+- Legacy `frames_to_skip` semantics are now captured explicitly as `modulo = frames_to_skip + 1`, matching the old behavior instead of silently inventing a new skip rule.
+- The decoder-backed sampling boundary now lives behind `core/video/capture.py`, keeping PyAV opening/seeking/reading separate from Prepare filtering logic and making fake-capture tests possible without importing real video dependencies.
+- `core/video/__init__.py` now uses lazy exports instead of eager imports because the new capture/probe/project layering exposed an import cycle; keeping `__init__` lightweight is the safer long-term pattern for this package.
+- Decoder-backed sampling currently preserves the legacy rule that frames before the effective `time_start_ms + start_time_offset_ms` should not increment the working frame index, so downstream timing artifacts stay aligned with the old pipeline semantics.
+- `sample_project_video(...)` now resolves crop zones and crop render plans from persisted project metadata plus `PrepareConfig`, so later Prepare steps can consume a stable project-backed sampling contract instead of rebuilding those decisions ad hoc.
+
+## Files Changed
+
+- `docs/progress.md`: Updated session memory before coding, then recorded the completed in-folder launcher fix, checks run, and next steps.
+- `vocra/run.py`: Added a direct launcher that works from inside the `vocra/` folder.
+- `vocra/run.cmd`: Added a Windows wrapper so the launcher can be invoked easily from `cmd`/Explorer contexts.
+- `tests/unit/test_cli_version.py`: Added coverage for running `python run.py --version` with `cwd=vocra/`.
+
+- `docs/progress.md`: Updated session memory before coding, then recorded the completed VOCra repo-separation slice, checks run, and next steps.
+- `vocra/_version.py`: Added package-owned VOCra version metadata.
+- `vocra/__init__.py`: Switched version import from the old root `_version.py` to `vocra._version`.
+- `vocra/__main__.py`: Added direct `python -m vocra` entrypoint support.
+- `pyproject.toml`: Renamed package metadata to `VOCra`, added package discovery and console script wiring, and moved dynamic version lookup into `vocra._version`.
+- `build.py`: Moved version import to `vocra._version`.
+- `README.md`: Updated standalone-package notes and removed obsolete warnings about legacy package metadata still being required.
+- `docs/Troubleshooting.md`: Updated troubleshooting to reflect standalone VOCra runtime/package behavior.
+- `tests/unit/test_cli_version.py`: Added coverage for `python -m vocra --version`.
+- `_version.py`: Deleted after all active VOCra consumers moved to `vocra._version`.
+
+- `docs/progress.md`: Updated session memory before coding, then recorded the completed Phase 20 documentation slice, verification commands, one failed verification attempt, and next steps.
+- `README.md`: Replaced the legacy VideOCR README with VOCra-accurate architecture, status, quickstart, deterministic demo, and development guidance.
+- `docs/Troubleshooting.md`: Added a dedicated troubleshooting guide for common VOCra setup/runtime issues during the migration period.
+
+- `docs/progress.md`: Updated session memory before coding, then recorded the completed OCR CLI parity slice, checks run, and next steps.
+- `vocra/cli/ocr_cmd.py`: Added `ocr resume-failed` and `ocr rerun-empty`, plus shared OCR run-parser setup reused across the run-oriented OCR commands.
+- `tests/unit/test_ocr_cli.py`: Added focused CLI coverage for `resume-failed` and `rerun-empty`.
+
+- `docs/progress.md`: Updated session memory before coding, then recorded full Phase 19 completion status, architecture decisions, checks run, and next steps.
+- `vocra/gui/review_tab.py`: Added Review compare controls, candidate table rendering, compare summary rendering, and helper functions for source-run selection and candidate-row presentation.
+- `vocra/gui/main_window.py`: Wired Review compare refresh, segment-driven compare selection, winner application, and post-compare Review/Package refresh behavior.
+- `vocra/cli/review_cmd.py`: Added `review compare-list` and `review compare-apply` so compare has CLI parity with the GUI flow.
+- `vocra/app/ocr_compare_service.py`: Added direct comparison-item lookup used by CLI and GUI selection flows.
+- `vocra/app/__init__.py`: Exported the compare lookup helper.
+- `tests/unit/test_review_tab.py`: Added Review compare-table presentation coverage.
+- `tests/unit/test_review_cli.py`: Added compare-list and compare-apply CLI coverage.
+- `tests/unit/test_ocr_compare_app_service.py`: Added packaging verification after compare winner application.
+
+- `docs/progress.md`: Updated session memory before coding, then recorded the completed Phase 19 comparison foundation, the metadata-compatibility fix, checks run, and next steps.
+- `vocra/app/models.py`: Added typed OCR comparison models for compare-run summaries, per-segment candidates, and winner-application outcomes.
+- `vocra/app/ocr_compare_service.py`: Added service-layer OCR comparison loading, compare summary rendering, and winner-selection persistence into review-state artifacts.
+- `vocra/app/__init__.py`: Exported the new OCR comparison models and service helpers.
+- `tests/unit/test_ocr_compare_app_service.py`: Added focused tests for comparison loading, missing candidate handling, and winner persistence behavior.
+
+- `docs/progress.md`: Updated the active goal before coding, then recorded final Phase 18 completion status, acceptance evidence, files changed, checks run, and the next post-Phase-18 target.
+- `vocra/app/models.py`: Extended Package models with explicit Package format and richer resolved review-state summary fields.
+- `vocra/app/package_service.py`: Added Package format validation, resolved review-state summary/status, and output-folder resolution for GUI actions.
+- `vocra/app/__init__.py`: Exported the new Package output-folder resolver.
+- `vocra/gui/package_tab.py`: Added explicit `Format` / `Review state` fields and the missing `Open Output Folder` action.
+- `vocra/gui/main_window.py`: Wired the final Phase 18 Package behavior through app services, including Package form reset on project load and output-folder opening.
+- `tests/unit/test_package_app_service.py`: Added acceptance-style Phase 18 coverage for GUI/app vs. CLI output parity, review-policy behavior, and output-folder resolution.
+- `tests/unit/test_package_tab.py`: Updated Package-tab presentation tests for the richer Package summary contract.
+
+- `docs/progress.md`: Updated the active goal before coding, then recorded the completed first Package-tab slice, architecture notes, failed attempts, checks run, and next steps.
+- `vocra/core/package/service.py`: Added a non-writing Package preview path and refactored `package_srt(...)` to reuse the same preview/join logic for export.
+- `vocra/app/models.py`: Added Package-tab app models and extended `AppState` with `package_summary`.
+- `vocra/app/package_service.py`: Added GUI-facing Package summary, preview, export, and run-selection helpers.
+- `vocra/app/service.py`: Added Package summary loading into project-open state.
+- `vocra/app/__init__.py`: Exported the new Package models and Package service helpers for the GUI-facing app layer.
+- `vocra/gui/package_tab.py`: Added the first dedicated Package tab module with selectors, run table, preview panel, and artifact-open controls.
+- `vocra/gui/main_window.py`: Replaced the Package placeholder with real Package-tab wiring and refresh/open/export flows.
+- `tests/unit/test_package_app_service.py`: Added Package app-service tests for summary loading plus preview/export behavior.
+- `tests/unit/test_package_tab.py`: Added focused Package-tab presentation tests for run-table rows and selected-run detail lines.
+- `tests/unit/test_app_service.py`: Extended project-open state coverage to assert Package summary presence.
+
+- `docs/progress.md`: Updated the active goal before the full Phase 17 completion pass, then recorded Phase 17 completion status, new architecture decisions, files changed, and verified checks.
+- `vocra/app/models.py`: Added `ReviewBatchOutcome` and `ReviewSelectionDetail` for Review GUI batch/evidence flows.
+- `vocra/app/review_service.py`: Added representative-image preview rendering, raw OCR output loading with fallback, filter-based batch-save helpers, and review navigation helpers.
+- `vocra/app/__init__.py`: Exported the new Review detail, navigation, and batch helpers.
+- `vocra/gui/review_tab.py`: Added in-tab image preview, raw-output viewer, navigation controls, filter-based batch status actions, and shortcut help text.
+- `vocra/gui/main_window.py`: Wired Review evidence loading, Review-only keyboard shortcuts, selection navigation, batch review actions, and edited-text status inference through app services.
+- `tests/unit/test_review_app_service.py`: Added coverage for Review evidence loading, batch saves, navigation, and suspicious-item helpers.
+- `docs/progress.md`: Updated the current goal before coding, then recorded the first Review-tab slice, architecture notes, checks run, and next steps aligned to detailed Phase 17.
+- `vocra/app/models.py`: Added Review-tab app models and extended `AppState` with `review_summary`.
+- `vocra/app/review_service.py`: Added GUI-facing Review-stage artifact loading, selection defaults, item lookup, path resolution, and save wrappers.
+- `vocra/app/service.py`: Added Review summary loading into project-open state.
+- `vocra/app/__init__.py`: Exported Review-tab models and Review service helpers for the GUI-facing app layer.
+- `vocra/gui/review_tab.py`: Added the first dedicated Review tab module with run/filter selectors, review-item table, selected-item detail fields, and save/status actions.
+- `vocra/gui/main_window.py`: Replaced the old Review placeholder with real Review-tab wiring, including refresh, item selection, single-item saves, and representative-image opening.
+- `tests/unit/test_review_app_service.py`: Added Review app-service tests for summary loading, item lookup, and save/reload behavior.
+- `tests/unit/test_app_service.py`: Extended project-open state coverage to assert Review summary presence.
+
+- `docs/progress.md`: Updated the current goal before coding, then recorded the completed OCR CLI parity slice, architecture note, checks run, and refreshed next steps.
+- `vocra/cli/ocr_cmd.py`: Added `vocra ocr test-backend`, factored shared OCR config arguments for `ocr run` and backend testing, and made shared config parsing reusable across both handlers.
+- `tests/unit/test_ocr_cli.py`: Added CLI coverage for backend-test success, failure exit code behavior, and config-file override handling.
+
+- `docs/progress.md`: Updated Phase 16 status honestly to complete at the current code/test level, recorded the final helper/test slice, and moved the next target to OCR smoke validation plus Phase 17 planning.
+- `vocra/gui/ocr_tab.py`: Extracted `_build_selected_ocr_run_lines(...)` so selected OCR-run detail rendering is testable without adding more GUI-controller logic.
+- `tests/unit/test_ocr_tab.py`: Added focused OCR-tab presentation tests for run-table rows and selected-run detail lines.
+
+- `docs/progress.md`: Updated current Phase 16 goal/status before coding and recorded the completed OCR run-status polish slice, checks, and next steps afterward.
+- `vocra/app/models.py`: Extended `OcrRunListItem` with `created_label` and `edited_count`.
+- `vocra/app/ocr_service.py`: Added artifact-derived OCR run status for edited-count and created time.
+- `vocra/gui/ocr_tab.py`: Updated the OCR runs table and selected-run details to show `Edited` and `Created`.
+- `tests/unit/test_ocr_app_service.py`: Added coverage for OCR run summary created/edited status.
+- `docs/progress.md`: Updated current Phase 16 goal/status before coding and recorded the completed selected-run config-reuse slice, checks, and next steps afterward.
+- `vocra/app/ocr_service.py`: Added selected-run config loading from `ocr_config.json` into `OcrConfigForm`.
+- `vocra/app/__init__.py`: Exported the selected-run OCR config loader for the GUI-facing app layer.
+- `vocra/gui/ocr_tab.py`: Added a `Load Selected Run Config` action to the OCR tab.
+- `vocra/gui/main_window.py`: Wired selected-run config loading into the OCR GUI through the app service layer.
+- `tests/unit/test_ocr_app_service.py`: Added coverage for loading OCR form state from saved run config artifacts.
+- `docs/progress.md`: Updated current Phase 16 goal/status before coding and recorded the completed OCR run-table/selection slice, checks, and next steps afterward.
+- `vocra/app/models.py`: Extended `OcrRunListItem` with optional `model_name` for richer OCR run presentation.
+- `vocra/app/ocr_service.py`: Added OCR run lookup by `run_id` and optional model metadata parsing for OCR run summaries.
+- `vocra/app/__init__.py`: Exported the new OCR run lookup helper for the GUI-facing app layer.
+- `vocra/gui/ocr_tab.py`: Replaced the OCR summary-only view with the first OCR runs table, run-id combo options, and selected-run detail rendering.
+- `vocra/gui/main_window.py`: Wired OCR table selection into form targeting and made OCR artifact-open actions prefer the selected run.
+- `tests/unit/test_ocr_app_service.py`: Added coverage for run lookup and model-less OCR run metadata.
+- `docs/progress.md`: Updated current Phase 16 goal/status before coding and recorded the completed OCR resume/rerun GUI slice, checks, and next steps afterward.
+- `vocra/core/ocr/service.py`: Added latest-row-aware resume selection plus `rerun_empty=True` support for rerunning only empty OCR results on an existing run.
+- `vocra/app/ocr_run_service.py`: Added explicit GUI-facing `resume_failed_ocr_from_project(...)` and `rerun_empty_ocr_from_project(...)` wrappers plus safe target-run validation.
+- `vocra/app/__init__.py`: Exported the new OCR rerun app-service helpers.
+- `vocra/gui/ocr_tab.py`: Added `Resume Failed Only` and `Rerun Empty Only` buttons and included them in OCR running-state disable/enable handling.
+- `vocra/gui/main_window.py`: Wired the new OCR actions into the existing async run path and shared OCR status/log handling.
+- `tests/unit/test_ocr_service.py`: Added coverage for rerunning only empty OCR results on an existing run.
+- `tests/unit/test_ocr_run_app_service.py`: Added coverage for the new GUI-facing OCR rerun wrappers and `rerun_empty` forwarding.
+- `docs/progress.md`: Updated Phase 16 goal/status before coding and recorded the completed backend-aware/Test-Backend OCR GUI slice, checks, and next steps afterward.
+- `vocra/app/models.py`: Added OCR backend form-spec/test-outcome models and extended `OcrConfigForm` with `local-command` fields.
+- `vocra/app/ocr_service.py`: Added backend form specs and backend-default application helpers for OCR GUI behavior.
+- `vocra/app/ocr_run_service.py`: Added GUI-facing OCR backend connection testing and extended OCR config building for `local-command` fields.
+- `vocra/app/__init__.py`: Exported the new OCR backend helpers/outcomes for the GUI-facing app layer.
+- `vocra/gui/ocr_tab.py`: Added backend-aware OCR field enablement, `Test Backend`, and explicit `local-command` GUI inputs.
+- `vocra/gui/main_window.py`: Wired OCR backend selection changes and asynchronous GUI backend testing through app services.
+- `tests/unit/test_ocr_app_service.py`: Added coverage for OCR backend form specs and backend-default application.
+- `tests/unit/test_ocr_run_app_service.py`: Added coverage for GUI OCR backend testing and `local-command` config forwarding.
+- `docs/progress.md`: Updated session goal/status before coding and recorded the completed first OCR GUI slice, architecture notes, changed files, checks, and next steps after implementation.
+- `vocra/core/ocr/registry.py`: Added backend-name listing so GUI/app OCR configuration uses the same backend registry as the core OCR service.
+- `vocra/app/models.py`: Added OCR-stage GUI-facing models for OCR summary rows, OCR tab form state, and OCR run outcome reporting.
+- `vocra/app/ocr_service.py`: Added a dedicated OCR-tab app service for prepare-run discovery, OCR-run artifact summarization, backend-option exposure, latest-run lookup, and OCR summary rendering.
+- `vocra/app/ocr_run_service.py`: Added a dedicated GUI-facing OCR run service that validates selected prepare artifacts, parses OCR config fields, and calls the existing core OCR service.
+- `vocra/app/service.py`: Extended project-open app state loading so OCR summary/config state is populated alongside existing Project and Prepare data.
+- `vocra/app/__init__.py`: Exported the new OCR models and OCR service helpers for the GUI-facing app layer.
+- `vocra/gui/ocr_tab.py`: Added the first dedicated OCR tab module with backend/config controls, OCR status/log helpers, summary rendering, and artifact-open actions.
+- `vocra/gui/main_window.py`: Replaced the OCR placeholder tab with the new OCR tab, wired OCR summary refreshes into project open/create and Prepare completion, and added background OCR run handling plus latest-artifact actions.
+- `tests/unit/test_ocr_app_service.py`: Added app-layer tests for OCR summary rendering and default OCR form loading from artifact state.
+- `tests/unit/test_ocr_run_app_service.py`: Added app-layer tests for GUI-facing OCR run validation, config forwarding, and numeric field parsing.
+- `tests/unit/test_app_service.py`: Extended existing app-state coverage to assert OCR summary/config state is loaded for an opened fixture project.
+
+- `vocra/gui/main_window.py`: Fixed the Prepare preview priming crash by removing the invalid slider `.get()` call and using persisted Prepare config state for the initial preview target.
+- `docs/progress.md`: Recorded the additional slider-crash repair and the rerun checks.
+- `docs/progress.md`: Recorded the user-reported GUI regression, the repair work, and the updated status/risks honestly.
+- `vocra/gui/project_tab.py`: Split the project-folder input key from the Create Project button key to fix the GUI create-project path.
+- `vocra/gui/main_window.py`: Updated the create-project event wiring for the new button/path keys and added automatic preview priming after project create/open.
+- `tests/unit/test_project_tab.py`: Added a regression test that locks in distinct Project-tab keys for create-path input vs create button.
+- `vocra/gui/main_window.py`: Added a gentler default launch size and minimum window size for the GUI shell.
+- `vocra/gui/prepare_tab.py`: Reduced the default Prepare log/summary multiline sizes so the initial window autosizing is less aggressive.
+- `docs/progress.md`: Recorded the GUI sizing adjustment and checks run.
+- `docs/progress.md`: Updated the tracked goal/status again, then recorded the final Phase 15 close-out work and checks.
+- `vocra/app/prepare_service.py`: Added source-to-preview crop-zone staging so existing zone specs can be edited visually on the preview.
+- `vocra/gui/widgets/crop_canvas.py`: Added preview-space move/resize helpers for staged crop selections.
+- `vocra/gui/widgets/__init__.py`: Exported the new crop-canvas editing helpers.
+- `vocra/gui/prepare_tab.py`: Added crop edit modes, `Stage Active Zone`, and `Open Prepared Images`.
+- `vocra/gui/main_window.py`: Wired visual crop move/resize editing plus the prepared-images action into the Prepare tab flow.
+- `tests/unit/test_crop_canvas_widget.py`: Added move/resize coverage for preview-space selection helpers.
+- `tests/unit/test_prepare_app_service.py`: Added coverage for staging persisted crop-zone specs back onto the preview.
+- `docs/progress.md`: Updated the tracked Phase 15 goal/status again, then recorded the new Prepare stop-support slice and the checks run for it.
+- `vocra/core/prepare/errors.py`: Added the first explicit Prepare cancellation error contract.
+- `vocra/core/prepare/sampler.py`: Added cooperative cancellation checks inside decoder-backed frame sampling.
+- `vocra/core/prepare/service.py`: Added cancellation checkpoints across the main Prepare orchestration stages.
+- `vocra/core/prepare/__init__.py`: Exported the new Prepare cancellation contract.
+- `vocra/app/prepare_run_service.py`: Added `cancel_requested` support so GUI-facing Prepare runs can pass cancellation down to core.
+- `vocra/gui/prepare_tab.py`: Added the first `Stop Prepare` button and updated run/stop button state handling.
+- `vocra/gui/main_window.py`: Wired per-run cancellation events, stop requests, and cancelled-run GUI handling into the Prepare tab flow.
+- `tests/unit/test_prepare_sampler.py`: Added cancellation coverage for decoder-backed Prepare sampling.
+- `tests/unit/test_prepare_run_app_service.py`: Added app-layer cancellation forwarding coverage for Prepare runs.
+- `docs/progress.md`: Updated the tracked Phase 15 goal/status again, then recorded the new Prepare progress/log slice and the checks run for it.
+- `vocra/core/progress.py`: Added the first shared typed progress-event contract.
+- `vocra/core/prepare/service.py`: Added optional Prepare progress emission across the main orchestration stages.
+- `vocra/app/models.py`: Added a GUI-facing `PrepareRunProgress` model.
+- `vocra/app/prepare_run_service.py`: Added progress callback forwarding from core Prepare progress into app-facing progress updates.
+- `vocra/app/__init__.py`: Exported the new Prepare progress model.
+- `vocra/gui/prepare_tab.py`: Added a visible Prepare run log panel and helper functions for log updates.
+- `vocra/gui/main_window.py`: Wired Prepare progress events from the background task into visible GUI status/log updates.
+- `tests/unit/test_prepare_run_app_service.py`: Added coverage for app-layer progress forwarding during Prepare runs.
+- `docs/progress.md`: Updated the tracked Phase 15 goal/status again, then recorded the new GUI Prepare-run slice and the checks run for it.
+- `vocra/core/prepare/detectors/registry.py`: Added the first shared detector backend factory/normalizer for Prepare.
+- `vocra/core/prepare/detectors/__init__.py`: Exported the shared detector factory helpers.
+- `vocra/cli/prepare_cmd.py`: Switched CLI Prepare detector creation to the shared detector registry.
+- `vocra/app/prepare_run_service.py`: Added the GUI-facing Prepare run wrapper over persisted config plus existing core orchestration.
+- `vocra/app/models.py`: Added a GUI-facing `PrepareRunOutcome` contract.
+- `vocra/app/__init__.py`: Exported the new Prepare run service and result model.
+- `vocra/gui/prepare_tab.py`: Added the first `Run Prepare` button and Prepare run-status text.
+- `vocra/gui/main_window.py`: Wired persisted editor-state save, async Prepare run launch, project-switch guarding during active runs, and completion refresh flow into the Prepare tab.
+- `tests/unit/test_prepare_run_app_service.py`: Added coverage for GUI-facing Prepare run execution and prerequisite validation.
+- `docs/progress.md`: Updated the tracked Phase 15 goal/status again, then recorded the new interactive-crop slice and the checks run for it.
+- `vocra/app/prepare_service.py`: Added preview drag-rectangle normalization, preview-to-source crop-zone mapping, and a public crop-zone spec formatter for GUI use.
+- `vocra/app/__init__.py`: Exported the new interactive-crop helpers through the app-layer surface.
+- `vocra/gui/widgets/crop_canvas.py`: Added the reusable Prepare preview graph widget helpers for rendering preview images and normalized drag rectangles.
+- `vocra/gui/widgets/__init__.py`: Added the first widget helper export surface.
+- `vocra/gui/prepare_tab.py`: Replaced the static preview image with an interactive graph canvas and added active-zone/apply/clear selection controls plus selection-state helpers.
+- `vocra/gui/main_window.py`: Wired preview drag events, selection reset behavior, and apply-to-zone interaction into the Prepare tab without moving coordinate math into GUI code.
+- `tests/unit/test_prepare_app_service.py`: Added direct coverage for preview-selection mapping back to original video coordinates.
+- `tests/unit/test_crop_canvas_widget.py`: Added unit coverage for selection normalization and clamping on the preview canvas.
+- `docs/progress.md`: Updated the tracked Phase 15 goal from preview to crop-zone persistence/overlay, then recorded this new slice and the latest checks.
+- `vocra/app/prepare_service.py`: Added crop-zone load/save helpers, preview overlay rendering, and crop artifact synchronization.
+- `vocra/app/models.py`: Added a GUI-facing crop-zone editor state model and carried it in `AppState`.
+- `vocra/app/service.py`: Loaded crop-zone editor state into `AppState` and synchronized `crop_zones.json` when saving Prepare config.
+- `vocra/app/__init__.py`: Exported the new crop-zone services and model.
+- `vocra/gui/prepare_tab.py`: Added crop-zone editor inputs, metadata, and form helpers.
+- `vocra/gui/main_window.py`: Wired crop-zone save/reload/clear actions and crop-overlay preview loading into the Prepare tab event flow.
+- `tests/unit/test_prepare_app_service.py`: Added crop artifact sync and crop-overlay preview coverage.
+- `tests/unit/test_app_service.py`: Extended config-save coverage to assert `crop_zones.json` stays synchronized.
+- `docs/progress.md`: Updated the tracked Phase 15 goal from config editing to read-only preview, then recorded the preview slice and latest checks.
+- `vocra/core/video/preview.py`: Added seek-based frame preview loading, aspect-fit resizing, and PNG encoding.
+- `vocra/core/video/__init__.py`: Exported the new preview helpers through the lazy video utility surface.
+- `vocra/app/models.py`: Added a GUI-facing Prepare preview frame contract.
+- `vocra/app/service.py`: Added app-layer preview loading from project source video using the shared core preview path.
+- `vocra/app/__init__.py`: Exported Prepare preview helpers and model.
+- `vocra/gui/prepare_tab.py`: Added preview image/slider/meta widgets and helper functions for preview context updates.
+- `vocra/gui/main_window.py`: Wired preview context sync plus preview-load actions into the Prepare tab event flow.
+- `tests/unit/test_video_preview.py`: Added core preview loader coverage with a fake capture.
+- `tests/unit/test_app_service.py`: Added app-level preview loading coverage through a fake project source video.
+- `docs/progress.md`: Updated the tracked Phase 15 goal from read-only summary to persisted Prepare config editing, then recorded this config-panel slice and the latest checks.
+- `vocra/app/models.py`: Added the GUI-facing `PrepareConfigForm` and carried it in `AppState`.
+- `vocra/app/__init__.py`: Exported Prepare-config load/save helpers and the new form model.
+- `vocra/app/service.py`: Added Prepare-config load/save/validation helpers, preserved unsupported config fields during save, and kept project open resilient when config is invalid.
+- `vocra/gui/prepare_tab.py`: Added a config editor panel, field keys, and form update/build helpers for the Prepare tab.
+- `vocra/gui/main_window.py`: Wired Prepare-config reload/save/open-file actions into the GUI event flow.
+- `tests/unit/test_app_service.py`: Added coverage for default Prepare-config form loading and config-save persistence with preserved hidden fields.
+- `docs/progress.md`: Updated the goal to the first Phase 15 Prepare-tab slice before coding, then recorded the Prepare summary work, checks run, and the remaining Phase 15 gaps.
+- `vocra/app/models.py`: Added a GUI-facing Prepare-stage summary contract and carried it in `AppState`.
+- `vocra/app/__init__.py`: Exported the Prepare-stage summary helpers.
+- `vocra/app/service.py`: Added Prepare-stage summary loading/rendering from durable project artifacts.
+- `vocra/gui/prepare_tab.py`: Added the first dedicated Prepare tab module with read-only summary and artifact-opening actions.
+- `vocra/gui/main_window.py`: Wired the Prepare tab into the GUI shell with refresh, open-folder, and open-manifest actions.
+- `tests/unit/test_app_service.py`: Added coverage for Prepare-stage summary loading/rendering from the fixture project.
+- `docs/progress.md`: Updated the remaining Phase 14 goal before coding, then recorded the recent-project store work, checks run, and the shift toward detailed Phase 15.
+- `vocra/app/state.py`: Added durable app-global recent-project persistence.
+- `vocra/app/models.py`: Added recent-project summaries to GUI-facing app state.
+- `vocra/app/__init__.py`: Exported the new app-state persistence and recent-project helpers.
+- `vocra/app/service.py`: Added recent-project loading/updating and passed recent-project summaries back to the GUI-facing app state.
+- `vocra/gui/project_tab.py`: Added a recent-project list plus selection helper for reopening recent projects from the GUI.
+- `vocra/gui/main_window.py`: Wired recent-project loading and reopening into the Project tab event flow.
+- `tests/unit/test_app_state.py`: Added recent-project persistence coverage.
+- `tests/unit/test_app_service.py`: Added coverage proving GUI-facing project creation updates recent-project state.
+- `docs/progress.md`: Updated the goal to the first Phase 14 Project-tab slice before coding, then recorded the new GUI Project-tab work, checks run, risks, and next steps.
+- `vocra/app/models.py`: Added richer GUI-facing project/source metadata contracts.
+- `vocra/app/__init__.py`: Exported the new project-creation and project-overview helpers for the GUI/app layer.
+- `vocra/app/service.py`: Added GUI-facing project creation, richer project/source summary rendering, and split project-overview vs stage-status rendering.
+- `vocra/gui/project_tab.py`: Added the first dedicated Project tab module with create-project inputs and separate overview/status panels.
+- `vocra/gui/main_window.py`: Reworked the shell so Project UI is tab-based, supports create/open project flows, and adds an open-project-folder action while still calling app services.
+- `tests/unit/test_app_service.py`: Added GUI-facing project creation coverage and richer project-overview assertions.
+- `docs/progress.md`: Updated Phase 13 goal before coding, then recorded the first GUI-shell slice, checks run, architecture decisions, and next handoff steps.
+- `vocra/app/__init__.py`: Exported the first GUI-facing app models and service helpers.
+- `vocra/app/models.py`: Added minimal app-state, dashboard, and stage-status dataclasses for the GUI shell.
+- `vocra/app/service.py`: Added project dashboard loading and rendering helpers that inspect durable project/prepare/ocr/review/package artifacts without moving core logic into the GUI.
+- `vocra/gui/__init__.py`: Exported the GUI shell entrypoint.
+- `vocra/gui/main_window.py`: Added the first PySimpleGUI shell window with existing-project open, dashboard rendering, and placeholder stage tabs.
+- `vocra/cli/gui_cmd.py`: Added the `vocra gui` command.
+- `vocra/cli/main.py`: Wired the new `gui` command into the VOCra CLI.
+- `tests/unit/test_app_service.py`: Added dashboard/service coverage for artifact status and saved review state detection.
+- `tests/unit/test_gui_cli.py`: Added CLI wiring coverage for the new `vocra gui` entrypoint.
+- `docs/progress.md`: Updated session memory before adding package CLI coverage, then marked detailed Phase 12 complete and moved the next focus to detailed Phase 13.
+- `tests/unit/test_package_cli.py`: Added direct CLI coverage for package review-state policy.
+- `docs/progress.md`: Updated session memory before implementing batch review operations, then recorded the completed Phase 12 step, checks run, and next handoff point.
+- `vocra/core/review/service.py`: Added durable batch review updates over explicit segment lists or filter-selected review items.
+- `vocra/core/review/__init__.py`: Exported the new batch review service helper.
+- `vocra/cli/review_cmd.py`: Added `vocra review batch-set`.
+- `tests/unit/test_review_service.py`: Added batch review service coverage.
+- `tests/unit/test_review_cli.py`: Added batch review CLI coverage.
+- `docs/progress.md`: Updated the session memory before implementing this Phase 12 follow-up, then recorded the new package review-policy work, failed attempt, checks run, and next steps.
+- `vocra/core/package/service.py`: Added explicit review-state policy handling for package runs.
+- `vocra/cli/package_cmd.py`: Added CLI control for package review-state policy.
+- `tests/unit/test_srt_packager.py`: Added coverage for review-state ignore/require behavior and OCR-error recovery through reviewed text.
+- `tests/unit/test_review_service.py`: Added OCR-error review-filter coverage.
+- `docs/progress.md`: Updated session memory before the Review-layer work, then recorded the completed Review slice, checks run, and next handoff steps.
+- `vocra/core/review/models.py`: Added durable review-state and merged review-item contracts.
+- `vocra/core/review/quality.py`: Added basic quality-flag generation and filter helpers for review items.
+- `vocra/core/review/service.py`: Added durable `review_state.jsonl` loading/saving plus merged review-item loading by Prepare segment + OCR row.
+- `vocra/core/review/__init__.py`: Exported the first review-layer helpers.
+- `vocra/cli/review_cmd.py`: Added `vocra review list` and `vocra review set`.
+- `vocra/cli/main.py`: Wired the new `review` command group into the CLI.
+- `vocra/core/package/service.py`: Made packaging review-aware by joining optional review-state artifacts on `segment_id`.
+- `tests/unit/test_review_service.py`: Added core review-service coverage.
+- `tests/unit/test_review_cli.py`: Added CLI coverage for review list/set.
+- `tests/unit/test_srt_packager.py`: Added review-aware packaging coverage.
+- `vocra/cli/prepare_cmd.py`: Added the new `vocra prepare run` CLI surface, config parsing, detector selection, and JSON summary output for Prepare runs.
+- `vocra/cli/main.py`: Wired the new `prepare` command group into the VOCra CLI.
+- `vocra/core/prepare/similarity.py`: Added a reusable SSIM helper with a deterministic fallback for environments where `fast_ssim` is unavailable.
+- `vocra/core/prepare/sampler.py`: Added legacy-style brightness masking and carried per-zone `source_frame_indices` through sampled crops.
+- `vocra/core/prepare/frame_filter.py`: Added coarse pre-detection SSIM filtering that preserves skipped frame spans, while keeping the existing tight-box representative selection path.
+- `vocra/core/prepare/stitch.py`: Extended stitched placements so kept detector tiles can retain the frame span they represent.
+- `vocra/core/prepare/grids.py`: Passed frame-span metadata from sampled zone frames into stitched detection layouts.
+- `vocra/core/prepare/segmenter.py`: Extended detected-frame contracts so detector results can carry merged source-frame spans into later Prepare stages.
+- `vocra/core/prepare/service.py`: Wired coarse SSIM filtering and brightness-aware sampling into `run_prepare(...)` before detector batching.
+- `vocra/core/prepare/__init__.py`: Exported the new Prepare CLI/runtime helpers.
+- `tests/unit/test_prepare_sampler.py`: Added brightness-mask coverage.
+- `tests/unit/test_prepare_frame_filter.py`: Added coarse SSIM skip coverage.
+- `tests/unit/test_prepare_full_run.py`: Updated the full Prepare orchestration expectation to cover frame-span-preserving coarse SSIM behavior.
+- `tests/unit/test_prepare_cli.py`: Added Prepare CLI coverage.
+- `tests/integration/test_prepare_to_package_fake_ocr.py`: Added end-to-end Prepare -> fake OCR -> package coverage on a synthetic project.
+- `docs/progress.md`: Updated detailed phase reporting so Phase 11 completion is now recorded truthfully against `docs/Plan.md`.
+- `vocra/core/prepare/service.py`: Added the first fuller `run_prepare(...)` orchestration slice, including detector-grid batching settings sourced from `PrepareConfig.detector`.
+- `vocra/core/prepare/grids.py`: Added persisted detection-grid image writing for detector execution.
+- `vocra/core/prepare/detectors/fake.py`: Extended the fake detector so tests can optionally size boxes to the full saved image.
+- `vocra/core/prepare/__init__.py`: Exported `run_prepare(...)`.
+- `tests/unit/test_prepare_full_run.py`: Added a synthetic end-to-end Prepare test that exercises the fuller orchestration path from sampling to written subtitle segments.
+- `tests/unit/test_fake_detector_backend.py`: Added coverage for the fake detector full-image box mode.
+- `docs/progress.md`: Updated detailed Phase 11 status, current goal, files changed, checks, and next steps.
+- `vocra/core/prepare/frame_filter.py`: Extended representative batch metadata so later Prepare stages can build final segments without recomputing frame spans or detection boxes.
+- `vocra/core/prepare/segments.py`: Added timing-owned subtitle-segment generation from representative batches.
+- `vocra/core/prepare/writer.py`: Extended prepare artifact writing with optional `subtitle_segments.jsonl` output and final segment-named representative image materialization.
+- `vocra/core/prepare/service.py`: Connected the current durable prepare-run path to subtitle-segment generation when sampled-frame timing is available.
+- `vocra/core/prepare/models.py`: Extended `PrepareRunSummary` with `segment_count`.
+- `vocra/core/prepare/__init__.py`: Exported the new segment-generation helper.
+- `tests/unit/test_prepare_frame_filter.py`: Updated coverage for richer representative batch metadata.
+- `tests/unit/test_prepare_segments.py`: Added coverage for subtitle-segment generation, including timestamp fallback and union-rect fallback behavior.
+- `tests/unit/test_prepare_writer.py`: Updated writer coverage for the new segment-aware artifact shape.
+- `tests/unit/test_prepare_run_service.py`: Updated durable prepare-run coverage so written segment manifests and segment-named representative images are verified.
+- `docs/progress.md`: Updated current detailed Phase 11 status, architecture notes, files changed, and checks to match `docs/Plan.md`.
+- `vocra/core/prepare/grids.py`: Added stitched detection-grid batching and lookup helpers for sampled zone frames.
+- `vocra/core/prepare/writer.py`: Extended prepare artifact writing to persist detection-grid images and representative candidate image crops, and to expose those directories through `PrepareArtifacts`.
+- `vocra/core/prepare/service.py`: Allowed prepare candidate selection runs to carry prepared grid artifacts into durable run output.
+- `vocra/core/prepare/__init__.py`: Exported the new stitched-grid contracts and helpers.
+- `tests/unit/test_prepare_grids.py`: Added coverage for stitched-grid batching, placement, and lookup helpers.
+- `tests/unit/test_prepare_writer.py`: Extended writer coverage for persisted grid and representative image artifacts.
+- `tests/unit/test_prepare_run_service.py`: Extended prepare-run coverage so representative candidate image paths and persisted grid artifacts are verified.
+- `docs/progress.md`: Updated current Phase 11 status, architecture decisions, checks, and next steps to match `docs/Plan.md`.
+- `docs/progress.md`: Created the initial project memory file for future sessions.
+- `pyproject.toml`: Added `pytest` to the dev dependency group and configured pytest test discovery.
+- `vocra/__init__.py`: Added the initial VOCra package and exposed `__version__`.
+- `vocra/cli/__init__.py`: Added the CLI package marker.
+- `vocra/cli/main.py`: Added a minimal `vocra` CLI with `--version`.
+- `vocra/cli/project_cmd.py`: Added `project create`, `project inspect`, and `project validate` command handlers.
+- `vocra/core/__init__.py`: Added the core package marker.
+- `vocra/core/project/__init__.py`: Exported project schema and workspace helpers.
+- `vocra/core/project/schema.py`: Added core project dataclasses and path contracts.
+- `vocra/core/project/workspace.py`: Added project workspace creation, loading, validation, and atomic JSON writing.
+- `vocra/core/video/__init__.py`: Exported video probe helpers.
+- `vocra/core/video/probe.py`: Added video metadata probing and lightweight fingerprinting.
+- `tests/__init__.py`: Added test package marker for `unittest` discovery.
+- `tests/unit/__init__.py`: Added unit test package marker.
+- `tests/unit/test_cli_version.py`: Converted the CLI smoke test to `unittest`.
+- `tests/unit/test_project_workspace.py`: Added unit coverage for project creation, reopening, non-empty root rejection, and missing source validation.
+- `vocra/core/project/manifest.py`: Added shared JSON manifest read/write helpers and validation.
+- `vocra/core/project/jsonl.py`: Added shared JSONL append/read/atomic write helpers.
+- `vocra/core/project/runs.py`: Added run-id generation and run directory creation helpers.
+- `tests/unit/test_jsonl.py`: Added JSONL utility tests.
+- `tests/unit/test_project_artifacts.py`: Added manifest and run-folder utility tests.
+- `vocra/core/prepare/__init__.py`: Added prepare package exports.
+- `vocra/core/prepare/models.py`: Added prepare-stage data contracts.
+- `vocra/core/ocr/__init__.py`: Added OCR package exports.
+- `vocra/core/ocr/models.py`: Added OCR-stage data contracts.
+- `vocra/core/package/__init__.py`: Added package-stage exports.
+- `vocra/core/package/srt.py`: Added SRT timestamp formatting and rendering helpers.
+- `vocra/core/package/service.py`: Added minimal artifact-driven SRT packaging service.
+- `vocra/cli/package_cmd.py`: Added `package srt` command handler.
+- `vocra/cli/main.py`: Hooked package CLI parser into the main command tree.
+- `tests/fixtures/projects/simple.vocra/project.json`: Added fixture project manifest.
+- `tests/fixtures/projects/simple.vocra/prepare/subtitle_segments.jsonl`: Added fixture prepared segment data.
+- `tests/fixtures/projects/simple.vocra/ocr/runs/fake/normalized_text.jsonl`: Added fixture normalized OCR data.
+- `tests/unit/test_segment_contract.py`: Added segment contract round-trip test.
+- `tests/unit/test_srt_packager.py`: Added SRT formatting and package service tests.
+- `vocra/core/ocr/backends/__init__.py`: Added OCR backend package exports.
+- `vocra/core/ocr/backends/base.py`: Added OCR backend base protocol and test result contract.
+- `vocra/core/ocr/backends/fake.py`: Added the fake OCR backend implementation.
+- `vocra/core/ocr/registry.py`: Added OCR backend registry helpers.
+- `vocra/core/ocr/service.py`: Added OCR run orchestration and artifact writing.
+- `vocra/cli/ocr_cmd.py`: Added `ocr run` CLI command handler.
+- `vocra/cli/main.py`: Hooked OCR CLI parser into the main command tree.
+- `vocra/core/ocr/__init__.py`: Exported OCR registry and service helpers.
+- `vocra/core/ocr/models.py`: Added `OcrOutput.to_dict()` for easier artifact serialization.
+- `tests/fixtures/projects/simple.vocra/prepare/representative_images/seg_000001_z0.jpg`: Added placeholder fixture representative image.
+- `tests/fixtures/projects/simple.vocra/prepare/representative_images/seg_000002_z0.jpg`: Added placeholder fixture representative image.
+- `tests/fixtures/projects/simple.vocra/prepare/representative_images/seg_000003_z1.jpg`: Added placeholder fixture representative image.
+- `tests/unit/test_fake_ocr_backend.py`: Added fake OCR backend tests.
+- `tests/unit/test_ocr_service.py`: Added OCR service tests, including resume and OCR-to-package flow.
+- `vocra/core/ocr/backends/openai_compatible.py`: Added the OpenAI-compatible vision OCR backend.
+- `vocra/core/ocr/backends/__init__.py`: Exported the OpenAI-compatible backend alongside the fake backend.
+- `vocra/core/ocr/registry.py`: Registered `openai-compatible-vision`.
+- `vocra/cli/ocr_cmd.py`: Added OCR config-file loading and OpenAI-compatible CLI options.
+- `tests/unit/test_openai_compatible_backend.py`: Added mock-server tests for the OpenAI-compatible backend and CLI config support.
+- `vocra/core/ocr/backends/ollama.py`: Added the Ollama OCR backend.
+- `vocra/core/ocr/backends/__init__.py`: Exported the Ollama backend alongside the fake and OpenAI-compatible backends.
+- `vocra/core/ocr/registry.py`: Registered `ollama`.
+- `vocra/cli/ocr_cmd.py`: Updated shared HTTP-backend CLI help text to cover Ollama as well as OpenAI-compatible endpoints.
+- `tests/unit/test_ollama_backend.py`: Added mock-server tests for the Ollama backend and OCR-service integration.
+- `vocra/core/ocr/backends/local_command.py`: Added the local-command OCR backend.
+- `vocra/core/ocr/backends/__init__.py`: Exported the local-command backend alongside the fake, OpenAI-compatible, and Ollama backends.
+- `vocra/core/ocr/registry.py`: Registered `local-command`.
+- `vocra/cli/ocr_cmd.py`: Added local-command CLI options for command template, stdout format, and working directory.
+- `tests/unit/test_local_command_backend.py`: Added local-command backend tests, including CLI config-file coverage.
+- `legacy/extracted_algorithms.md`: Added the first structured Prepare extraction map and invariants note.
+- `vocra/core/video/timestamps.py`: Added time parsing, SRT formatting, and subtitle timing reconstruction helpers.
+- `vocra/core/video/__init__.py`: Exported the new timestamp helpers.
+- `vocra/core/prepare/crop.py`: Added crop-zone validation/defaulting and crop/scale planning helpers.
+- `vocra/core/prepare/stitch.py`: Added stitched-grid placement and polygon unstitch helpers.
+- `vocra/core/prepare/__init__.py`: Exported the new Prepare utility dataclasses.
+- `tests/unit/test_time_utils.py`: Added timestamp utility tests.
+- `tests/unit/test_crop_coordinate_mapping.py`: Added crop validation and crop-plan tests.
+- `tests/unit/test_stitch_utils.py`: Added stitch layout and unstitch helper tests.
+- `vocra/core/prepare/detectors/__init__.py`: Added Prepare detector package exports.
+- `vocra/core/prepare/detectors/base.py`: Added detector backend protocol and detection result contract.
+- `vocra/core/prepare/detectors/fake.py`: Added the fake Prepare text detector backend.
+- `vocra/core/prepare/detectors/paddle.py`: Added the Paddle text-detection backend adapter and parser helpers.
+- `tests/fixtures/detectors/paddle_text_detection.jsonl`: Added a fixture for Paddle detection output parsing.
+- `tests/unit/test_fake_detector_backend.py`: Added fake detector backend tests.
+- `tests/unit/test_paddle_detector_backend.py`: Added Paddle detector parser and backend tests.
+- `vocra/core/prepare/segmenter.py`: Added extracted line-rect grouping, layout similarity, and frame-layout grouping helpers.
+- `vocra/core/prepare/frame_filter.py`: Added representative-frame selection helpers for contiguous similar layout groups.
+- `vocra/core/prepare/service.py`: Added detector-output mapping and representative-candidate orchestration helpers.
+- `vocra/core/prepare/__init__.py`: Exported the new Prepare grouping/filtering dataclasses and helpers.
+- `tests/unit/test_prepare_segmenter.py`: Added tests for line-rect merging, layout similarity, and layout grouping behavior.
+- `tests/unit/test_prepare_frame_filter.py`: Added tests for representative-frame selection and score-vs-timing behavior.
+- `tests/unit/test_prepare_service.py`: Added tests for mapping stitched detector outputs back to per-frame polygons and selecting representative candidates from synthetic grid images.
+- `vocra/core/prepare/config.py`: Added the first Prepare config contract.
+- `vocra/core/prepare/writer.py`: Added durable prepare-run artifact writing for intermediate Prepare outputs.
+- `vocra/core/prepare/models.py`: Added `PrepareRunSummary`.
+- `vocra/core/prepare/service.py`: Added a minimal PrepareService-style entrypoint that creates run folders and writes representative candidate artifacts.
+- `vocra/core/prepare/__init__.py`: Exported the new prepare config and run result contracts.
+- `tests/unit/test_prepare_config.py`: Added prepare config round-trip coverage.
+- `tests/unit/test_prepare_writer.py`: Added prepare artifact writer coverage.
+- `tests/unit/test_prepare_run_service.py`: Added durable prepare-run creation coverage using a synthetic detector/grid scenario.
+- `vocra/core/prepare/sampler.py`: Added synthetic-friendly frame sampling, SSIM sample extraction, frame timestamp mapping, and average-duration helpers.
+- `vocra/core/prepare/models.py`: Extended `PrepareRunSummary` with sampled-frame counts.
+- `vocra/core/prepare/writer.py`: Extended prepare artifact writing with `timeline.jsonl` and timestamp-aware `frame_index.jsonl`.
+- `vocra/core/prepare/service.py`: Extended the minimal PrepareService-style flow to accept sampled frames and persist timing-aware artifacts.
+- `vocra/core/prepare/__init__.py`: Exported the sampler dataclasses.
+- `tests/unit/test_prepare_sampler.py`: Added sampler and timestamp helper coverage.
+- `tests/unit/test_prepare_writer.py`: Extended writer coverage for timeline/timestamp artifacts.
+- `tests/unit/test_prepare_run_service.py`: Extended durable prepare-run coverage with sampled-frame timing artifacts.
+- `vocra/core/video/capture.py`: Added the decoder-backed capture protocol and PyAV adapter boundary.
+- `vocra/core/prepare/sampler.py`: Extended sampling with decoder-backed capture support.
+- `vocra/core/video/__init__.py`: Switched to lazy exports to avoid a circular import between video probing and project workspace loading.
+- `vocra/core/prepare/__init__.py`: Exported `sample_video_capture`.
+- `tests/unit/test_prepare_sampler.py`: Extended sampler coverage for decoder-backed capture semantics using a fake capture object.
+- `vocra/core/prepare/service.py`: Added `PrepareSamplingResult` and `sample_project_video(...)` for project-backed sampling.
+- `vocra/core/prepare/__init__.py`: Exported the new project-backed sampling result/service helpers.
+- `tests/unit/test_prepare_project_sampling.py`: Added coverage for project-backed sampling with fake capture and real project metadata.
+
+## Tests / Checks Run
+
+- `Get-Content -Raw vocra/__main__.py`
+- `Get-Content -Raw vocra/cli/main.py`
+- `Get-Content -Raw docs/progress.md | Select-Object -First 60`
+- `ruff check vocra tests build.py` -> passed
+- `python -m unittest tests.unit.test_cli_version` -> passed, 3 tests
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 175 tests
+- `python run.py --version` with `cwd=vocra/` -> passed, output `VOCra 1.5.1`
+- `python run.py --help` with `cwd=vocra/` -> passed
+
+- `Get-Content -Raw vocra/__init__.py`
+- `Get-Content -Raw pyproject.toml`
+- `Get-Content -Raw README.md`
+- `Get-Content -Raw docs/progress.md`
+- `Get-Content -Raw tests/unit/test_cli_version.py`
+- `Get-Content -Raw build.py`
+- `ruff check vocra tests build.py` -> passed
+- `python -m unittest tests.unit.test_cli_version` -> passed, 2 tests
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 174 tests
+- `python -m vocra --help` -> passed
+- `python -m vocra --version` -> passed, output `VOCra 1.5.1`
+- `python -c "import vocra; print(vocra.__version__)"` -> passed, output `1.5.1`
+- `rg -n _version build.py vocra pyproject.toml tests README.md docs` -> passed and confirmed active version references now point to `vocra._version`; remaining root `_version.py` mentions are only historical notes inside `docs/progress.md`.
+- `rg -n 'from _version|_version\\.__version__|name = "VideOCR"|documentation = "https://github.com/timminator/VideOCR|Repository = "https://github.com/timminator/VideOCR|Issues = "https://github.com/timminator/VideOCR|packages = \\[\\]|ruff check vocra tests legacy|pyproject.toml metadata still uses legacy naming' README.md docs pyproject.toml build.py vocra tests _version.py` -> failed due PowerShell quoting/parsing while trying to run one combined audit regex; followed by simpler targeted reads plus `rg -n _version ...`, which were sufficient to verify the separation change.
+
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `Get-Content -Raw docs/progress.md`
+- `Get-Content -Raw README.md`
+- `Get-ChildItem docs | Select-Object Name,Length | Format-Table -AutoSize | Out-String -Width 200`
+- `Get-Content -Raw pyproject.toml`
+- `Get-Content -Raw vocra/cli/gui_cmd.py`
+- `python -m vocra.cli.main --help` -> passed
+- `python -m vocra.cli.main project --help` -> passed
+- `python -m vocra.cli.main project create --help` -> passed
+- `python -m vocra.cli.main prepare --help` -> passed
+- `python -m vocra.cli.main prepare run --help` -> passed
+- `python -m vocra.cli.main ocr --help` -> passed
+- `python -m vocra.cli.main ocr run --help` -> passed
+- `python -m vocra.cli.main review --help` -> passed
+- `python -m vocra.cli.main review list --help` -> passed
+- `python -m vocra.cli.main package --help` -> passed
+- `python -m vocra.cli.main package srt --help` -> passed
+- `python -m vocra.cli.main gui --help` -> passed
+- Temporary fixture-demo command: copied `tests/fixtures/projects/simple.vocra` to a temp directory, ran `python -m vocra.cli.main ocr run --project <temp copy> --backend fake --run-id fake-demo --force`, then `python -m vocra.cli.main package srt --project <temp copy> --ocr-run fake-demo` -> OCR/package succeeded, but the command returned exit code 1 because the trailing verification step mistakenly called `Get-Content` on the `package/runs` directory itself.
+- Temporary fixture-demo rerun: copied `tests/fixtures/projects/simple.vocra` to a temp directory, reran fake OCR and package, then read the generated `output.srt` -> passed and confirmed three subtitle entries with `Text for seg_000001`, `Text for seg_000002`, and `Text for seg_000003`.
+
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `Get-Content -Raw docs/progress.md`
+- `Get-Content -Raw vocra/cli/ocr_cmd.py`
+- `Get-Content -Raw vocra/core/ocr/service.py`
+- `Get-Content -Raw vocra/core/ocr/registry.py`
+- `Get-Content -Raw vocra/core/ocr/models.py`
+- `Get-Content -Raw vocra/app/ocr_run_service.py`
+- `Get-Content -Raw tests/unit/test_ocr_service.py`
+- `Get-Content -Raw tests/unit/test_ocr_run_app_service.py`
+- `Get-Content -Raw tests/unit/test_ocr_cli.py`
+- `ruff check vocra tests legacy` -> passed
+- `python -m unittest tests.unit.test_ocr_cli tests.unit.test_ocr_service tests.unit.test_ocr_run_app_service` -> passed, 17 tests
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 173 tests
+- `python -m vocra.cli.main ocr --help` -> passed
+- `python -m vocra.cli.main ocr resume-failed --help` -> passed
+- `python -m vocra.cli.main ocr rerun-empty --help` -> passed
+
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `Get-Content -Raw docs/progress.md`
+- `Get-Content -Raw vocra/cli/main.py`
+- `Get-Content -Raw vocra/cli/review_cmd.py`
+- `Get-Content -Raw vocra/gui/main_window.py`
+- `Get-Content -Raw vocra/gui/ocr_tab.py`
+- `Get-Content -Raw vocra/gui/review_tab.py`
+- `Get-Content -Raw tests/unit/test_review_cli.py`
+- `Get-Content -Raw tests/unit/test_gui_cli.py`
+- `Get-Content -Raw vocra/app/service.py`
+- `Get-Content -Raw vocra/app/models.py`
+- `Get-Content -Raw vocra/app/review_service.py`
+- `Get-Content -Raw vocra/cli/ocr_cmd.py`
+- `Get-Content -Raw vocra/core/package/service.py`
+- `Get-Content -Raw tests/unit/test_ocr_tab.py`
+- `Get-Content -Raw tests/unit/test_package_tab.py`
+- `Get-Content -Raw tests/unit/test_review_app_service.py`
+- `ruff check vocra tests` -> initially failed on import ordering in `vocra/gui/main_window.py`; passed after auto-fixing import order
+- `python -m unittest tests.unit.test_ocr_compare_app_service tests.unit.test_review_cli tests.unit.test_review_tab` -> passed, 10 tests
+- `ruff check vocra\gui\main_window.py vocra\gui\review_tab.py vocra\cli\review_cmd.py vocra\app\ocr_compare_service.py tests\unit\test_review_cli.py tests\unit\test_review_tab.py tests\unit\test_ocr_compare_app_service.py --fix` -> passed after fixing import order automatically
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 171 tests
+- `ruff check vocra tests` -> passed
+- `python -m vocra.cli.main review compare-list --help` -> passed
+- `python -m vocra.cli.main review compare-apply --help` -> passed
+- `python -m vocra.cli.main gui --help` -> passed
+
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `Get-Content -Raw docs/progress.md`
+- `Get-ChildItem vocra\app | Select-Object Name | Format-Table -HideTableHeaders | Out-String -Width 200`
+- `Get-ChildItem vocra\gui | Select-Object Name | Format-Table -HideTableHeaders | Out-String -Width 200`
+- `Get-Content -Raw vocra\app\models.py`
+- `Get-Content -Raw vocra\app\review_service.py`
+- `Get-Content -Raw vocra\core\review\service.py`
+- `Get-Content -Raw vocra\gui\review_tab.py`
+- `Get-ChildItem tests\unit | Select-Object Name | Format-Table -HideTableHeaders | Out-String -Width 200`
+- `rg -n "compare|winner|chosen text|multiple OCR runs|compare OCR" vocra tests docs`
+- `Get-Content -Raw vocra\app\ocr_service.py`
+- `Get-Content -Raw vocra\core\ocr\service.py`
+- `Get-Content -Raw vocra\core\review\models.py`
+- `Get-Content -Raw tests\unit\test_review_app_service.py`
+- `Get-ChildItem -Recurse tests\fixtures\projects\simple.vocra | Select-Object FullName | Out-String -Width 220`
+- `Get-Content -Raw tests\fixtures\projects\simple.vocra\prepare\subtitle_segments.jsonl`
+- `Get-Content -Raw tests\fixtures\projects\simple.vocra\ocr\runs\fake\normalized_text.jsonl`
+- `if (Test-Path tests\fixtures\projects\simple.vocra\ocr\runs\fake\review_state.jsonl) { Get-Content -Raw tests\fixtures\projects\simple.vocra\ocr\runs\fake\review_state.jsonl } else { '__MISSING__' }`
+- `Get-Content -Raw vocra\core\project\jsonl.py`
+- `Get-Content -Raw vocra\app\ocr_run_service.py`
+- `Get-Content -Raw vocra\app\__init__.py`
+- `Get-Content -Raw vocra\core\review\quality.py`
+- `Get-Content -Raw tests\unit\test_ocr_app_service.py`
+- `Get-Content -Raw tests\unit\test_review_service.py`
+- `ruff check vocra tests` -> initially failed on import ordering in `vocra/app/__init__.py` and an unused import in `vocra/app/ocr_compare_service.py`; both were fixed before rerunning checks
+- `python -m unittest tests.unit.test_ocr_compare_app_service tests.unit.test_review_app_service tests.unit.test_ocr_app_service` -> initially failed because the first compare-run filter treated fixture `fake` as belonging to a different/unknown prepare source and excluded it from comparison; passed after relaxing the metadata-compatibility rule, 21 tests
+- `ruff check vocra\app\__init__.py vocra\app\ocr_compare_service.py tests\unit\test_ocr_compare_app_service.py --fix` -> passed after fixing import order automatically
+- `ruff check vocra tests` -> passed
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 167 tests
+- `python -m vocra.cli.main gui --help` -> passed
+
+- `Get-Content docs/Design.md`
+- `Get-Content docs/Agent.md`
+- `Get-Content docs/Product.md`
+- `Get-Content docs/Plan.md`
+- `Get-Content docs/progress.md`
+- `Get-Content vocra/app/package_service.py`
+- `Get-Content vocra/gui/package_tab.py`
+- `Get-Content vocra/gui/main_window.py`
+- `Get-Content vocra/core/package/service.py`
+- `Get-Content tests/unit/test_package_app_service.py`
+- `Get-Content vocra/app/models.py`
+- `rg -n "PREVIEW-PACKAGE|EXPORT-PACKAGE|OPEN-PACKAGE|REFRESH-PACKAGE|PACKAGE_RUN_TABLE_KEY" vocra/gui/main_window.py`
+- `Get-Content vocra/gui/main_window.py | Select-Object -Skip 1010 -First 240`
+- `Get-Content tests/unit/test_package_tab.py`
+- `Get-Content vocra/cli/main.py`
+- `rg -n "PackageConfigForm\\(|PackageStageSummary\\(" vocra tests`
+- `ruff check vocra tests` -> initially failed on import ordering in `tests/unit/test_package_app_service.py` and `vocra/app/__init__.py`; passed after fixes
+- `python -m unittest tests.unit.test_package_app_service tests.unit.test_package_tab tests.unit.test_app_service` -> passed, 16 tests
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 163 tests
+- `python -m vocra.cli.main gui --help` -> passed
+
+- `Get-Content docs/Design.md`
+- `Get-Content docs/Agent.md`
+- `Get-Content docs/Product.md`
+- `Get-Content docs/Plan.md`
+- `Get-Content docs/progress.md`
+- `rg --files docs`
+- `if (Test-Path docs/progress.md) { Write-Output 'EXISTS' } else { Write-Output 'MISSING' }` -> returned `EXISTS`
+- `Get-Content vocra/gui/package_tab.py` -> initially failed because the file did not exist yet; that confirmed the Package tab was still a placeholder before this session's implementation
+- `Get-Content vocra/gui/main_window.py`
+- `Get-Content vocra/app/service.py`
+- `Get-Content vocra/core/package/service.py`
+- `Get-Content vocra/cli/package_cmd.py`
+- `rg -n "Package|package" vocra/app vocra/gui tests/unit`
+- `Get-Content vocra/app/models.py`
+- `Get-Content vocra/app/__init__.py`
+- `Get-ChildItem tests/unit | Select-Object Name | Format-Table -HideTableHeaders | Out-String -Width 200`
+- `Get-Content vocra/core/package/srt.py`
+- `Get-Content tests/unit/test_package_cli.py`
+- `Get-Content tests/unit/test_srt_packager.py`
+- `Get-ChildItem -Recurse tests/fixtures/projects/simple.vocra | Select-Object FullName | Out-String -Width 220`
+- `Get-Content docs/progress.md -TotalCount 120`
+- `rg -n "^## In Progress|^## Not Started|^## Files Changed|^## Tests / Checks Run|^## Next Recommended Steps" docs/progress.md`
+- `Get-Content docs/progress.md | Select-Object -Skip 406 -First 30`
+- `ruff check vocra tests` -> initially failed on import ordering in `vocra/app/package_service.py` and an indentation error in `vocra/gui/main_window.py`; passed after fixes
+- `python -m unittest tests.unit.test_package_app_service tests.unit.test_package_tab tests.unit.test_app_service` -> initially failed because the indentation error in `vocra/gui/main_window.py` prevented `vocra.gui` imports; passed after fixes, 13 tests
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 160 tests
+- `python -m vocra.cli.main gui --help` -> passed
+
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `Get-Content -Raw docs/progress.md`
+- `Get-Content -Raw vocra/app/review_service.py`
+- `Get-Content -Raw vocra/gui/review_tab.py`
+- `Get-Content -Raw vocra/gui/main_window.py`
+- `Get-Content -Raw vocra/core/review/service.py`
+- `Get-Content -Raw tests/unit/test_review_app_service.py`
+- `Get-Content -Raw vocra/app/models.py`
+- `Get-ChildItem tests/fixtures/projects/simple.vocra/prepare/representative_images | Select-Object Name,Length | Format-Table -AutoSize | Out-String -Width 200` -> confirmed fixture representative images are placeholder 16-byte files, not valid JPEGs
+- `@' ... '@ | python -` -> confirmed Pillow cannot identify the fixture `representative_images/*.jpg` files, so the Review preview loader needed an invalid-image fallback and the preview test needed to write a real temporary JPEG first
+- `ruff check vocra tests` -> initially failed on import ordering in `tests/unit/test_review_app_service.py`, `vocra/app/__init__.py`, and `vocra/gui/main_window.py`; passed after import cleanup
+- `python -m unittest tests.unit.test_review_app_service tests.unit.test_review_service tests.unit.test_review_cli tests.unit.test_app_service` -> initially failed because the first image-preview test assumed fixture representative images were valid; passed after rewriting the test to distinguish invalid-fixture fallback from valid-image rendering, 23 tests
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 155 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `Get-Content -Raw docs/progress.md`
+- `Get-Content -Raw vocra/core/review/service.py`
+- `Get-Content -Raw vocra/core/review/quality.py`
+- `Get-Content -Raw vocra/cli/review_cmd.py`
+- `Get-Content -Raw vocra/gui/review_tab.py` -> initially failed because the file did not exist yet
+- `Get-Content -Raw vocra/gui/main_window.py`
+- `Get-Content -Raw vocra/app/service.py`
+- `rg -n "review" vocra/app vocra/gui tests/unit`
+- `Get-Content -Raw vocra/core/review/models.py`
+- `Get-Content -Raw vocra/app/models.py`
+- `Get-Content -Raw vocra/app/__init__.py`
+- `Get-Content -Raw tests/unit/test_app_service.py`
+- `Get-Content docs/progress.md | Select-Object -Skip 360 -First 60`
+- `Get-Content -Raw vocra/gui/ocr_tab.py`
+- `Get-Content -Raw vocra/gui/prepare_tab.py`
+- `Get-Content -Raw tests/unit/test_review_service.py`
+- `Get-Content -Raw tests/unit/test_review_cli.py`
+- `Get-ChildItem tests/fixtures/projects/simple.vocra/ocr/runs/fake`
+- `Get-Content -Raw tests/fixtures/projects/simple.vocra/ocr/runs/fake/raw_outputs.jsonl` -> failed because the fixture has no `raw_outputs.jsonl`
+- `Get-ChildItem tests/fixtures/projects/simple.vocra/prepare/representative_images`
+- `Get-Content -Raw vocra/core/prepare/models.py`
+- `rg -n "def format_srt_timestamp|format_srt_timestamp\\(" vocra/core/package`
+- `ruff check vocra tests` -> initially failed on import formatting in `vocra/app/review_service.py` and a missing blank line in `vocra/gui/review_tab.py`, then passed after fixes
+- `python -m unittest tests.unit.test_review_app_service tests.unit.test_review_service tests.unit.test_review_cli tests.unit.test_app_service` -> passed, 17 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 149 tests
+
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `if (Test-Path docs/progress.md) { Get-Content -Raw docs/progress.md } else { Write-Output 'MISSING' }`
+- `Get-Content -Raw vocra/cli/ocr_cmd.py`
+- `Get-Content -Raw vocra/app/ocr_run_service.py`
+- `Get-Content -Raw vocra/app/ocr_service.py`
+- `Get-Content -Raw vocra/core/ocr/registry.py`
+- `Get-Content -Raw vocra/core/ocr/backends/base.py`
+- `Get-Content -Raw tests/unit/test_ocr_run_app_service.py`
+- `rg -n "ocr run|configure_ocr_parser|ocr_cmd" tests vocra`
+- `Get-Content -Raw vocra/cli/main.py`
+- `Get-Content -Raw vocra/core/ocr/backends/fake.py`
+- `Get-Content -Raw vocra/core/ocr/backends/local_command.py`
+- `Get-Content -Raw vocra/core/ocr/backends/openai_compatible.py`
+- `Get-Content -Raw vocra/core/ocr/backends/ollama.py`
+- `Get-Content docs/progress.md -TotalCount 80`
+- `Select-String -Path docs/progress.md -Pattern '^## In Progress','^## Not Started','^## Blockers / Risks','^## Architecture Decisions','^## Files Changed','^## Tests / Checks Run','^## Next Recommended Steps'`
+- `Get-Content tests/unit/test_ocr_run_app_service.py -TotalCount 40`
+- `Get-Content -Raw tests/unit/test_prepare_cli.py`
+- `Get-Content -Raw tests/unit/test_gui_cli.py`
+- `Get-Content -Raw tests/unit/test_package_cli.py`
+- `Get-Content -Raw tests/unit/test_local_command_backend.py`
+- `Get-Content docs/progress.md | Select-Object -Skip 368 -First 28`
+- `python -m unittest tests.unit.test_ocr_cli tests.unit.test_ocr_run_app_service` -> passed, 10 tests
+- `ruff check vocra tests` -> passed
+- `python -m vocra.cli.main ocr test-backend --help` -> passed
+- `python -m vocra.cli.main ocr test-backend --backend fake` -> passed, returned JSON with `ok: true`
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 146 tests
+
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `Get-Content -Raw docs/progress.md`
+- `Get-Content -Raw vocra/gui/ocr_tab.py`
+- `Get-Content -Raw tests/unit/test_ocr_tab.py`
+- `Get-Content -Raw vocra/app/ocr_service.py`
+- `ruff check vocra tests legacy` -> initially failed on an extra trailing newline in `tests/unit/test_ocr_tab.py`, then passed after the fix
+- `python -m unittest tests.unit.test_ocr_tab tests.unit.test_ocr_app_service tests.unit.test_ocr_run_app_service tests.unit.test_gui_cli tests.unit.test_app_service` -> passed, 26 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 143 tests
+
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `Get-Content -Raw docs/progress.md`
+- `Get-Content -Raw vocra/app/ocr_service.py`
+- `Get-Content -Raw vocra/app/models.py`
+- `Get-Content -Raw vocra/core/project/runs.py`
+- `Get-Content -Raw vocra/core/review/service.py`
+- `Get-Content -Raw tests/unit/test_ocr_app_service.py`
+- `ruff check vocra tests legacy` -> passed
+- `python -m unittest tests.unit.test_ocr_app_service tests.unit.test_ocr_run_app_service tests.unit.test_gui_cli tests.unit.test_app_service` -> passed, 24 tests
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 141 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `Get-Content -Raw docs/progress.md`
+- `Get-Content -Raw vocra/app/ocr_service.py`
+- `Get-Content -Raw vocra/gui/ocr_tab.py`
+- `Get-Content -Raw vocra/gui/main_window.py`
+- `Get-Content -Raw tests/unit/test_ocr_app_service.py`
+- `Get-Content -Raw vocra/app/models.py`
+- `Get-Content -Raw vocra/app/__init__.py`
+- `ruff check vocra tests legacy` -> passed
+- `python -m unittest tests.unit.test_ocr_app_service tests.unit.test_ocr_run_app_service tests.unit.test_gui_cli tests.unit.test_app_service` -> passed, 23 tests
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 140 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `Get-Content -Raw docs/progress.md`
+- `rg -n "Table\\(|sg.Table|OPEN-LATEST-OCR|OCR_SUMMARY_KEY|run_id" vocra/gui tests`
+- `ruff check vocra tests legacy` -> initially failed on import ordering in `vocra/gui/main_window.py`, then passed after the import-order fix
+- `python -m unittest tests.unit.test_ocr_app_service tests.unit.test_ocr_run_app_service tests.unit.test_gui_cli tests.unit.test_app_service` -> passed, 21 tests
+- `ruff check vocra tests legacy` -> passed
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 138 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `Get-Content -Raw docs/progress.md`
+- `Get-Content -Raw vocra/app/ocr_run_service.py`
+- `Get-Content -Raw vocra/app/ocr_service.py`
+- `Get-Content -Raw vocra/app/models.py`
+- `Get-Content -Raw vocra/gui/ocr_tab.py`
+- `Get-Content -Raw vocra/gui/main_window.py`
+- `Get-Content -Raw vocra/core/ocr/service.py`
+- `Get-Content -Raw tests/unit/test_ocr_app_service.py`
+- `Get-Content -Raw tests/unit/test_ocr_run_app_service.py`
+- `Get-Content -Raw vocra/core/package/service.py`
+- `Get-Content -Raw vocra/core/review/service.py`
+- `Get-Content -Raw tests/unit/test_ocr_service.py`
+- `rg -n "RUN-OCR|TEST-OCR|REFRESH-OCR|OCR-BACKEND|OCR-RUN-DONE|OCR-BACKEND-TEST-DONE|latest OCR|OPEN-LATEST-OCR|OPEN-OCR-RUNS" vocra/gui/main_window.py`
+- `rg -n "normalized_text.jsonl|segment_id|read_jsonl\\(|text_by_segment|review_state|source\\[\\\"run_id\\\"\\]|load_review|build_srt|ocr run" vocra tests` -> failed due regex parse error; followed by direct file reads of package/review/OCR tests instead
+- `ruff check vocra tests legacy` -> passed
+- `python -m unittest tests.unit.test_ocr_service tests.unit.test_ocr_app_service tests.unit.test_ocr_run_app_service` -> passed, 16 tests
+- `python -m unittest tests.unit.test_app_service tests.unit.test_gui_cli tests.unit.test_ocr_service tests.unit.test_ocr_app_service tests.unit.test_ocr_run_app_service` -> passed, 25 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 137 tests
+- `Get-Content -Raw vocra\gui\ocr_tab.py`
+- `Get-Content -Raw vocra\app\ocr_service.py`
+- `Get-Content -Raw vocra\app\ocr_run_service.py`
+- `Get-Content -Raw vocra\core\ocr\backends\base.py`
+- `Get-Content -Raw vocra\core\ocr\backends\openai_compatible.py`
+- `Get-Content -Raw vocra\core\ocr\backends\ollama.py`
+- `Get-Content -Raw vocra\core\ocr\backends\local_command.py`
+- `Get-Content -Raw vocra\core\ocr\backends\fake.py`
+- `Get-Content -Raw vocra\app\models.py`
+- `Get-Content -Raw tests\unit\test_gui_cli.py`
+- `rg -n "OcrConfigForm|load_ocr_config_form|build_ocr_config_form|update_ocr_config_form" vocra tests`
+- `Get-Content -Raw vocra\app\__init__.py`
+- `Get-Content -Raw tests\unit\test_ocr_app_service.py`
+- `Get-Content -Raw tests\unit\test_ocr_run_app_service.py`
+- `ruff check vocra tests legacy` -> initially failed on an unused OCR-tab import in `vocra/gui/main_window.py` and Ruff `B903` in `tests/unit/test_ocr_run_app_service.py`; passed after fixes
+- `python -m unittest tests.unit.test_ocr_app_service tests.unit.test_ocr_run_app_service tests.unit.test_app_service` -> passed, 17 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `ruff check vocra tests legacy` -> passed
+- `python -m unittest tests.unit.test_ocr_app_service tests.unit.test_ocr_run_app_service tests.unit.test_app_service tests.unit.test_gui_cli` -> passed, 18 tests
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 134 tests
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `Get-Content -Raw docs/progress.md`
+- `Get-ChildItem -Recurse vocra\gui | Select-Object FullName | Out-String -Width 220`
+- `Get-ChildItem -Recurse vocra\app | Select-Object FullName | Out-String -Width 220`
+- `Get-ChildItem -Recurse vocra\core\ocr | Select-Object FullName | Out-String -Width 220`
+- `Get-ChildItem -Recurse tests\unit | Select-Object FullName | Out-String -Width 220`
+- `Get-Content -Raw vocra\app\models.py`
+- `Get-Content -Raw vocra\app\service.py`
+- `Get-Content -Raw vocra\gui\main_window.py`
+- `Get-Content -Raw vocra\core\ocr\service.py`
+- `Get-Content -Raw vocra\core\ocr\registry.py`
+- `Get-Content -Raw vocra\cli\ocr_cmd.py`
+- `Get-Content -Raw vocra\core\project\schema.py`
+- `Get-Content -Raw vocra\core\project\workspace.py`
+- `Get-Content -Raw vocra\core\ocr\backends\fake.py`
+- `Get-Content -Raw tests\unit\test_app_service.py`
+- `Get-Content -Raw tests\fixtures\projects\simple.vocra\prepare\subtitle_segments.jsonl`
+- `Get-Content -Raw vocra\app\prepare_run_service.py`
+- `Get-Content -Raw vocra\app\__init__.py`
+- `Get-Content -Raw vocra\core\ocr\models.py`
+- `Get-Content -Raw tests\unit\test_prepare_run_app_service.py`
+- `Get-Content -Raw vocra\gui\prepare_tab.py`
+- `Get-Content -Raw vocra\gui\project_tab.py`
+- `Get-ChildItem -Recurse tests\fixtures\projects\simple.vocra\ocr\runs\fake | Select-Object FullName | Out-String -Width 220`
+- `Get-Content -Raw tests\fixtures\projects\simple.vocra\ocr\runs\fake\normalized_text.jsonl`
+- `ruff check vocra tests legacy` -> initially failed on import ordering, an unused OCR-service import, and Ruff `B008` in `vocra/gui/main_window.py`; passed after fixes
+- `python -m unittest tests.unit.test_ocr_app_service tests.unit.test_ocr_run_app_service tests.unit.test_app_service` -> passed, 13 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `python -m unittest tests.unit.test_ocr_app_service tests.unit.test_ocr_run_app_service tests.unit.test_app_service tests.unit.test_gui_cli` -> passed, 14 tests
+- `ruff check vocra tests legacy` -> passed
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 130 tests
+
+- `rg -n "\.get\(\)" vocra/gui/main_window.py vocra/gui/prepare_tab.py vocra/gui/project_tab.py -S`
+- `Get-Content vocra/gui/main_window.py`
+- `ruff check vocra tests legacy` -> passed
+- `python -m unittest tests.unit.test_project_tab tests.unit.test_gui_cli tests.unit.test_app_service` -> passed, 10 tests
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 125 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `Get-Content vocra/gui/project_tab.py`
+- `Get-Content vocra/gui/main_window.py`
+- `Get-Content vocra/app/service.py`
+- `Get-Content vocra/core/project/workspace.py`
+- `Get-Content tests/unit/test_gui_cli.py`
+- `Get-Content tests/unit/test_app_service.py`
+- `ruff check vocra tests legacy` -> passed
+- `python -m unittest tests.unit.test_project_tab tests.unit.test_gui_cli tests.unit.test_app_service` -> passed, 10 tests
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 125 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `Get-Content vocra/gui/main_window.py`
+- `Get-Content vocra/gui/prepare_tab.py`
+- `ruff check vocra tests legacy` -> passed
+- `python -m vocra.cli.main gui --help` -> passed
+- `Get-Content docs/Design.md`
+- `Get-Content docs/Agent.md`
+- `Get-Content docs/Product.md`
+- `Get-Content docs/Plan.md`
+- `Get-Content docs/progress.md`
+- `Get-Content vocra/gui/widgets/crop_canvas.py`
+- `Get-Content vocra/gui/prepare_tab.py`
+- `Get-Content vocra/gui/main_window.py`
+- `Get-Content vocra/app/prepare_service.py`
+- `Get-Content tests/unit/test_crop_canvas_widget.py`
+- `Get-Content tests/unit/test_prepare_app_service.py`
+- `ruff check vocra tests legacy` -> initially failed on import ordering in `vocra/gui/widgets/__init__.py` after new crop-helper exports; passed after cleanup
+- `python -m unittest tests.unit.test_crop_canvas_widget tests.unit.test_prepare_app_service tests.unit.test_gui_cli` -> passed, 13 tests
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 124 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `Get-Content docs/progress.md`
+- `Get-Content vocra/core/prepare/service.py`
+- `Get-Content vocra/core/prepare/sampler.py`
+- `Get-Content vocra/app/prepare_run_service.py`
+- `Get-Content vocra/gui/main_window.py`
+- `Get-Content tests/unit/test_prepare_run_app_service.py`
+- `Get-Content vocra/gui/prepare_tab.py`
+- `Get-Content tests/unit/test_prepare_sampler.py`
+- `Get-Content tests/unit/test_prepare_run_service.py`
+- `ruff check vocra tests legacy` -> initially failed on nested-`with` and import ordering after stop-support wiring; passed after cleanup
+- `python -m unittest tests.unit.test_prepare_sampler tests.unit.test_prepare_run_app_service tests.unit.test_prepare_cli tests.unit.test_gui_cli` -> passed, 12 tests
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 120 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `Get-Content docs/progress.md`
+- `rg -n "ProgressEvent|progress sink|progress" vocra tests -S`
+- `Get-Content vocra/gui/main_window.py`
+- `Get-Content vocra/app/prepare_run_service.py`
+- `Get-Content vocra/core/prepare/service.py`
+- `ruff check vocra tests legacy` -> initially failed on import ordering in new progress-wiring files; passed after cleanup
+- `python -m unittest tests.unit.test_prepare_run_app_service tests.unit.test_prepare_cli tests.unit.test_gui_cli` -> initially failed because a mocked `run_prepare(...)` callback had the wrong signature; passed after fixing the mock and import order, 5 tests
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 118 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `Get-Content vocra/core/prepare/service.py`
+- `Get-Content vocra/cli/prepare_cmd.py`
+- `Get-Content tests/unit/test_prepare_cli.py`
+- `Get-Content vocra/app/service.py`
+- `rg -n "ProgressEvent|progress" vocra/core/prepare vocra/app tests -S`
+- `Get-ChildItem -Recurse vocra/core/prepare/detectors | Select-Object FullName | Out-String -Width 220`
+- `Get-Content vocra/core/prepare/detectors/__init__.py`
+- `Get-Content vocra/core/prepare/config.py`
+- `Get-Content tests/unit/test_app_service.py`
+- `python - <<'PY' ... hasattr(sg.Window, 'perform_long_operation') ... PY` via PowerShell heredoc -> confirmed the GUI shell can offload Prepare work without blocking the event loop
+- `ruff check vocra tests legacy` -> initially failed on stale detector-name wiring and import ordering in new app/gui tests/services; passed after cleanup
+- `python -m unittest tests.unit.test_prepare_run_app_service tests.unit.test_prepare_cli tests.unit.test_gui_cli` -> passed, 4 tests
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 117 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `Get-Content docs/progress.md`
+- `Get-Content vocra/gui/prepare_tab.py`
+- `Get-Content vocra/app/prepare_service.py`
+- `Get-Content vocra/gui/main_window.py`
+- `Get-Content vocra/app/models.py`
+- `Get-Content tests/unit/test_crop_coordinate_mapping.py`
+- `if (Test-Path vocra/gui/widgets) { Get-ChildItem -Recurse vocra/gui/widgets | Select-Object FullName | Out-String -Width 200 } else { '__MISSING__' }`
+- `python - <<'PY' ... inspect.signature(sg.Graph.draw_image) ... PY` via PowerShell heredoc -> confirmed `PySimpleGUI.Graph` accepts in-memory image `data` and `drag_submits`
+- `ruff check vocra tests legacy` -> initially failed on import ordering in `vocra/gui/main_window.py`; passed after reordering imports
+- `python -m unittest tests.unit.test_prepare_app_service tests.unit.test_crop_canvas_widget tests.unit.test_gui_cli` -> passed, 9 tests
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 115 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `rg -n "crop_zones|CropZone|crop zone|crop-zone" vocra tests CLI`
+- `Get-Content -Raw vocra/core/prepare/models.py`
+- `Get-Content -Raw vocra/core/prepare/crop.py`
+- `Get-Content -Raw vocra/app/service.py`
+- `Get-Content -Raw vocra/gui/prepare_tab.py`
+- `Get-Content -Raw vocra/core/project/schema.py`
+- `(Get-Content vocra/app/service.py | Measure-Object -Line).Lines`
+- `(Get-Content vocra/gui/main_window.py | Measure-Object -Line).Lines`
+- `Get-Content -Raw vocra/app/__init__.py`
+- `Get-Content -Raw tests/unit/test_crop_coordinate_mapping.py`
+- `Get-Content -Raw vocra/gui/main_window.py`
+- `ruff check vocra tests legacy` -> initially failed on import ordering in `vocra/app/prepare_service.py` and `vocra/gui/main_window.py`; passed after reordering imports
+- `python -m unittest tests.unit.test_prepare_app_service tests.unit.test_app_service tests.unit.test_video_preview tests.unit.test_app_state tests.unit.test_gui_cli` -> passed, 14 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 110 tests
+- `Get-Content -Raw vocra/core/video/capture.py`
+- `if (Test-Path vocra/core/video/preview.py) { Get-Content -Raw vocra/core/video/preview.py } else { '__MISSING__' }`
+- `Get-Content -Raw vocra/core/video/probe.py`
+- `rg -n "PySimpleGUI|Image\\(|preview|thumbnail|capture" vocra/gui vocra/app vocra/core/video tests`
+- `Get-ChildItem vocra/core/video | Select-Object Name | Out-String -Width 200`
+- `Get-Content -Raw tests/unit/test_prepare_sampler.py`
+- `Get-Content -Raw vocra/core/video/__init__.py`
+- `Get-Content -Raw vocra/gui/main_window.py`
+- `Get-Content -Raw vocra/gui/prepare_tab.py`
+- `ruff check vocra tests legacy` -> initially failed on import ordering in `vocra/gui/main_window.py`; passed after reordering imports
+- `python -m unittest tests.unit.test_video_preview tests.unit.test_app_service tests.unit.test_app_state tests.unit.test_gui_cli` -> passed, 11 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 107 tests
+- `Get-Content -Raw vocra/core/prepare/config.py`
+- `Get-Content -Raw vocra/app/service.py`
+- `Get-Content -Raw vocra/gui/prepare_tab.py`
+- `Get-Content -Raw vocra/gui/main_window.py`
+- `Get-Content -Raw docs/Plan.md`
+- `Get-Content -Raw docs/progress.md`
+- `rg -n "prepare_config" vocra tests`
+- `Get-Content -Raw vocra/core/project/manifest.py`
+- `Get-Content -Raw vocra/app/models.py`
+- `Get-Content -Raw tests/unit/test_app_service.py`
+- `Get-Content -Raw vocra/core/project/schema.py`
+- `if (Test-Path tests/fixtures/projects/simple.vocra/prepare/prepare_config.json) { Get-Content -Raw tests/fixtures/projects/simple.vocra/prepare/prepare_config.json } else { '__MISSING__' }`
+- `Get-Content -Raw vocra/core/project/workspace.py`
+- `Get-Content -Raw tests/unit/test_gui_cli.py`
+- `Get-Content docs/progress.md | Select-String -Pattern '^## In Progress' -Context 0,12 | Out-String -Width 220`
+- `ruff check vocra tests legacy` -> initially failed on `SIM118` in `vocra/app/service.py`; passed after replacing `dict.keys()` with direct iteration
+- `python -m unittest tests.unit.test_app_service tests.unit.test_app_state tests.unit.test_gui_cli` -> passed, 9 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 105 tests
+- `Get-Content docs/Design.md`
+- `Get-Content docs/Agent.md`
+- `Get-Content docs/Product.md`
+- `Get-Content docs/Plan.md`
+- `Get-Content docs/progress.md`
+- `Select-String -Path docs/Plan.md -Pattern "## 16. Phase 15|Prepare tab|Results summary|Acceptance criteria" -Context 0,12 | Out-String -Width 220`
+- `rg --files vocra | rg "prepare|gui|app"`
+- `Get-Content vocra/core/prepare/service.py`
+- `Get-Content vocra/core/prepare/config.py`
+- `Get-Content vocra/core/prepare/models.py`
+- `Get-Content tests/unit/test_prepare_cli.py`
+- `Get-ChildItem -Recurse tests/fixtures/projects/simple.vocra/prepare | Select-Object FullName | Out-String -Width 220`
+- `Get-Content vocra/core/prepare/writer.py`
+- `Get-Content vocra/core/prepare/__init__.py`
+- `ruff check vocra tests legacy` -> initially failed on import ordering in `vocra/app/service.py` and `tests/unit/test_app_service.py`; passed after cleanup
+- `python -m unittest tests.unit.test_app_service tests.unit.test_app_state tests.unit.test_gui_cli` -> passed, 7 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 103 tests
+- `Get-Content docs/Design.md`
+- `Get-Content docs/Agent.md`
+- `Get-Content docs/Product.md`
+- `Get-Content docs/Plan.md`
+- `Get-Content docs/progress.md`
+- `Select-String -Path docs/Plan.md -Pattern "## 15. Phase 14|recent projects|app_state.json|settings|global settings" -Context 0,10 | Out-String -Width 220`
+- `rg -n "recent projects|recent_projects|app_state.json|default project directory|Project tab" vocra tests docs -S`
+- `Get-Content vocra/app/service.py`
+- `Get-Content vocra/gui/main_window.py`
+- `Get-Content vocra/gui/project_tab.py`
+- `Get-Content vocra/app/__init__.py`
+- `ruff check vocra tests legacy` -> initially failed on import formatting in `vocra/app/__init__.py`, `vocra/app/service.py`, `vocra/app/state.py`, `vocra/gui/main_window.py`, and one missing `Path` import in `vocra/gui/project_tab.py`; passed after cleanup
+- `python -m unittest tests.unit.test_app_state tests.unit.test_app_service tests.unit.test_gui_cli` -> passed, 6 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 102 tests
+- `Get-Content docs/Design.md`
+- `Get-Content docs/Agent.md`
+- `Get-Content docs/Product.md`
+- `Get-Content docs/Plan.md`
+- `Get-Content docs/progress.md`
+- `Select-String -Path docs/Plan.md -Pattern "## 14. Phase 13|## 15. Phase 14|Acceptance criteria|Project tab|recent projects|open project folder button" -Context 0,12 | Out-String -Width 220`
+- `rg --files vocra | rg "app|gui|project|cli"`
+- `Get-Content vocra/app/service.py`
+- `Get-Content vocra/gui/main_window.py`
+- `Get-Content tests/unit/test_app_service.py`
+- `Get-Content tests/unit/test_project_workspace.py`
+- `Get-Content vocra/core/project/__init__.py`
+- `Get-Content vocra/app/models.py`
+- `rg -n "app_state|recent project|recent_projects|open project folder|thumbnail" vocra tests docs -S`
+- `Get-Content vocra/gui/project_tab.py`
+- `Get-Content vocra/app/service.py | Measure-Object -Line | Out-String`
+- `ruff check vocra tests legacy` -> initially failed on import ordering in `tests/unit/test_app_service.py`; passed after cleanup
+- `python -m unittest tests.unit.test_app_service tests.unit.test_gui_cli tests.unit.test_project_workspace` -> passed, 9 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 101 tests
+- `Get-Content docs/progress.md`
+- `Get-Content vocra/core/project/workspace.py`
+- `Get-Content vocra/cli/project_cmd.py`
+- `Select-String -Path docs/Plan.md -Pattern "Phase 13|GUI shell|dashboard|open project" -Context 3,10 | Out-String -Width 220`
+- `Get-Content vocra/core/project/schema.py`
+- `Get-Content pyproject.toml`
+- `Get-Content vocra/core/project/jsonl.py`
+- `Get-Content vocra/core/project/runs.py`
+- `Get-ChildItem -Recurse tests/fixtures/projects/simple.vocra | Select-Object FullName | Out-String -Width 220`
+- `Get-Content vocra/core/review/service.py`
+- `Get-Content vocra/core/package/service.py`
+- `Get-Content vocra/core/ocr/service.py`
+- `Get-Content vocra/core/project/manifest.py`
+- `Get-Content vocra/cli/main.py`
+- `Get-ChildItem tests/unit | Select-Object Name | Out-String -Width 220`
+- `Get-Content tests/fixtures/projects/simple.vocra/project.json`
+- `Get-Content tests/fixtures/projects/simple.vocra/ocr/runs/fake/normalized_text.jsonl`
+- `Get-Content tests/fixtures/projects/simple.vocra/prepare/subtitle_segments.jsonl`
+- `python -c "import importlib.util; print('PySimpleGUI', bool(importlib.util.find_spec('PySimpleGUI'))); print('PySide6', bool(importlib.util.find_spec('PySide6')))"` -> passed, `PySimpleGUI True`, `PySide6 False`
+- `ruff check vocra tests legacy` -> initially failed on import ordering in `vocra/app/service.py` and `tests/unit/test_app_service.py`; passed after cleanup
+- `python -m unittest tests.unit.test_app_service tests.unit.test_gui_cli` -> passed, 4 tests
+- `python -m vocra.cli.main gui --help` -> passed
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 100 tests
+- `python -c "from vocra.gui.main_window import run_main_window; print(run_main_window.__name__)"` -> passed
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `if (Test-Path docs/progress.md) { Get-Content -Raw docs/progress.md } else { 'MISSING' }`
+- `Get-Content -Raw vocra/core/review/quality.py`
+- `Get-Content -Raw tests/unit/test_srt_packager.py`
+- `rg -n "package srt|review_state_policy|configure_package_parser|PackageOptions" tests vocra`
+- `rg --files tests/unit | rg "package|cli"`
+- `Get-Content -Raw vocra/cli/package_cmd.py`
+- `Get-Content docs/progress.md | Select-String -Pattern '^## Current Goal|^## Current Status|^## In Progress|^## Next Recommended Steps' -Context 0,12 | Out-String -Width 240`
+- `Get-Content -Raw tests/unit/test_review_cli.py`
+- `ruff check vocra tests legacy` -> passed
+- `python -m unittest tests.unit.test_package_cli tests.unit.test_srt_packager tests.unit.test_review_service tests.unit.test_review_cli` -> passed, 16 tests
+- `python -m vocra.cli.main package srt --help` -> passed
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 96 tests
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `if (Test-Path docs/progress.md) { Get-Content -Raw docs/progress.md } else { 'MISSING' }`
+- `Get-Content -Raw vocra/core/review/service.py`
+- `Get-Content -Raw vocra/cli/review_cmd.py`
+- `Get-Content -Raw vocra/core/review/models.py`
+- `Get-Content -Raw tests/unit/test_review_cli.py`
+- `rg -n "batch|review list|review set|filter_review_items|save_review_edit" vocra tests`
+- `Get-Content -Raw vocra/core/review/__init__.py`
+- `ruff check vocra tests legacy` -> passed
+- `python -m unittest tests.unit.test_review_service tests.unit.test_review_cli` -> passed, 6 tests
+- `python -m vocra.cli.main review --help` -> passed
+- `python -m vocra.cli.main review batch-set --help` -> passed
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 94 tests
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `if (Test-Path docs/progress.md) { Get-Content -Raw docs/progress.md } else { 'MISSING' }`
+- `Get-Content -Raw vocra/core/package/service.py`
+- `Get-Content -Raw vocra/cli/package_cmd.py`
+- `Get-Content -Raw vocra/core/review/service.py`
+- `Get-Content -Raw vocra/core/review/quality.py`
+- `Get-Content -Raw tests/unit/test_review_service.py`
+- `Get-Content -Raw tests/unit/test_review_cli.py`
+- `Get-Content -Raw tests/unit/test_srt_packager.py`
+- `ruff check vocra tests legacy` -> initially failed on missing `ProjectWorkspaceError` import in `vocra/core/package/service.py` and import ordering in the updated tests; passed after fixes
+- `python -m unittest tests.unit.test_srt_packager tests.unit.test_review_service` -> initially failed because the missing `ProjectWorkspaceError` import caused `NameError`; passed after fixes, 11 tests
+- `python -m vocra.cli.main package srt --help` -> passed and showed the new `--review-state-policy {auto,ignore,require}` flag
+- `ruff check vocra tests legacy` -> passed
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 92 tests
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `if (Test-Path docs/progress.md) { Get-Content -Raw docs/progress.md } else { Write-Output 'MISSING' }`
+- `rg --files vocra tests docs | rg "review|package|ocr|prepare|cli"`
+- `Get-Content -Raw vocra/core/package/service.py`
+- `Get-Content -Raw vocra/core/package/srt.py`
+- `Get-Content -Raw vocra/cli/package_cmd.py`
+- `Get-Content -Raw vocra/cli/main.py`
+- `Get-Content -Raw vocra/core/ocr/service.py`
+- `Get-Content -Raw vocra/core/project/workspace.py`
+- `Get-Content -Raw vocra/core/project/schema.py`
+- `Get-Content -Raw vocra/core/project/jsonl.py`
+- `Get-Content -Raw vocra/core/project/__init__.py`
+- `Get-Content -Raw tests/unit/test_srt_packager.py`
+- `Get-Content -Raw tests/integration/test_prepare_to_package_fake_ocr.py`
+- `Get-Content -Raw tests/fixtures/projects/simple.vocra/ocr/runs/fake/normalized_text.jsonl`
+- `Get-Content -Raw tests/fixtures/projects/simple.vocra/prepare/subtitle_segments.jsonl`
+- `Get-Content -Raw vocra/core/prepare/models.py`
+- `Get-Content -Raw vocra/core/package/__init__.py`
+- `if (Test-Path vocra/core/review) { Get-ChildItem -Recurse vocra/core/review | Select-Object FullName | Out-String -Width 200 } else { '__MISSING__' }`
+- `Get-Content docs/progress.md | Select-String -Pattern '^## Files Changed|^## Tests / Checks Run|^## Next Recommended Steps|^## Completed|^## In Progress|^## Current Status|^## Current Goal|^## Architecture Decisions' -Context 0,20 | Out-String -Width 240`
+- `Get-Content -Raw vocra/core/review/service.py`
+- `ruff check vocra tests legacy` -> initially failed on Ruff `B009` because `vocra/core/package/service.py` used `getattr(...)` with constant attribute names on `ReviewState`; passed after replacing those with direct attribute access
+- `python -m unittest tests.unit.test_review_service tests.unit.test_review_cli tests.unit.test_srt_packager` -> passed, 8 tests
+- `python -m vocra.cli.main review --help` -> passed
+- `python -m vocra.cli.main package srt --help` -> passed
+- `ruff check vocra tests legacy` -> passed
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 88 tests
+- `Get-Content docs/Design.md`
+- `Get-Content docs/Agent.md`
+- `Get-Content docs/Product.md`
+- `Get-Content docs/Plan.md`
+- `Get-Content docs/progress.md`
+- `Get-Content vocra/core/prepare/service.py`
+- `Get-Content vocra/core/prepare/config.py`
+- `Get-Content vocra/core/prepare/frame_filter.py`
+- `Get-Content vocra/cli/main.py`
+- `Get-Content tests/unit/test_prepare_full_run.py`
+- `Get-Content tests/unit/test_prepare_project_sampling.py`
+- `Get-Content tests/unit/test_ocr_service.py`
+- `Get-Content vocra/core/prepare/__init__.py`
+- `Get-Content vocra/core/prepare/detectors/fake.py`
+- `Get-Content vocra/core/prepare/detectors/paddle.py`
+- `Get-Content vocra/core/prepare/detectors/base.py`
+- `Get-Content vocra/core/prepare/writer.py`
+- `Get-Content vocra/core/package/service.py`
+- `Get-Content pyproject.toml`
+- `rg -n "skimage|ssim|Pillow|numpy" -S pyproject.toml vocra tests CLI`
+- `Get-Content vocra/core/prepare/sampler.py`
+- `Get-Content vocra/core/project/workspace.py`
+- `Get-Content vocra/core/project/schema.py`
+- `Get-Content vocra/core/video/timestamps.py`
+- `Get-Content tests/unit/test_time_utils.py`
+- `Get-Content vocra/core/prepare/detectors/__init__.py`
+- `Get-Content tests/unit/test_prepare_run_service.py`
+- `Get-Content tests/unit/test_prepare_writer.py`
+- `ruff check vocra tests legacy` -> initially failed on import ordering in `tests/unit/test_prepare_cli.py` and `vocra/core/prepare/__init__.py`, then passed after fixes
+- `python -m unittest discover -s tests -p "test_*.py"` -> initially failed because the first coarse-SSIM Prepare run shortened the first segment to `1040ms`; passed after propagating skipped frame indices through placements and representative spans, 84 tests
+- `python -m vocra.cli.main prepare --help` -> passed
+- `python -m vocra.cli.main prepare run --help` -> passed
+- `Get-Content docs/Design.md`
+- `Get-Content docs/Agent.md`
+- `Get-Content docs/Product.md`
+- `Get-Content docs/Plan.md`
+- `Get-Content docs/progress.md`
+- `Get-Content vocra/core/prepare/detectors/fake.py`
+- `Get-Content vocra/core/prepare/detectors/paddle.py`
+- `Get-Content vocra/core/prepare/service.py`
+- `Get-Content vocra/core/project/schema.py`
+- `Get-Content vocra/core/project/workspace.py`
+- `if (Test-Path vocra/cli/prepare_cmd.py) { Get-Content vocra/cli/prepare_cmd.py } else { '__MISSING__' }`
+- `Get-Content tests/unit/test_fake_detector_backend.py`
+- `rg -n "ssim|similarity_fn|structural_similarity|FrameFilterResult" vocra tests CLI`
+- `Get-Content tests/unit/test_prepare_service.py`
+- `Get-Content vocra/core/prepare/grids.py`
+- `Get-Content vocra/core/prepare/writer.py`
+- `rg -n "class ProgressEvent|ProgressEvent\\(" vocra tests`
+- `Get-Content vocra/core/prepare/models.py`
+- `Get-Content vocra/cli/main.py`
+- `ruff check vocra tests legacy` -> passed on the first run after adding `run_prepare(...)`
+- `python -m unittest discover -s tests -p "test_*.py"` -> initially failed because the first full-run test assumed the fake detector would produce one detection per tile inside a multi-tile grid, then failed again because the first workaround changed grouping behavior; passed after routing grid-batching settings through `PrepareConfig.detector`, 81 tests
+- `Get-Content docs/Design.md`
+- `Get-Content docs/Agent.md`
+- `Get-Content docs/Product.md`
+- `Get-Content docs/Plan.md`
+- `Get-Content docs/progress.md`
+- `rg -n "SubtitleSegment|subtitle_segments.jsonl|representative_candidates|PrepareRunSummary|RepresentativeFrame" vocra tests`
+- `Get-Content tests/unit/test_segment_contract.py`
+- `Get-Content vocra/core/package/service.py`
+- `Get-Content tests/fixtures/projects/simple.vocra/prepare/subtitle_segments.jsonl`
+- `Get-Content vocra/core/video/timestamps.py`
+- `Select-String -Path CLI/videocr/video.py -Pattern "get_subtitle_timestamps|frame_timestamps|end_ms|start_ms|subtitle" -Context 2,4 | Out-String -Width 260`
+- `Get-Content tests/unit/test_prepare_frame_filter.py`
+- `ruff check vocra tests legacy` -> initially failed on import ordering in `vocra/core/prepare/__init__.py` and `vocra/core/prepare/service.py`, then passed after fixes
+- `python -m unittest discover -s tests -p "test_*.py"` -> initially failed because `tests/unit/test_prepare_run_service.py` expected an old timing value, then passed after correcting the expectation, 79 tests
+- `Get-Content docs\Design.md`
+- `Get-Content docs\Agent.md`
+- `Get-Content docs\Product.md`
+- `Get-Content docs\Plan.md`
+- `Get-Content docs\progress.md`
+- `Get-Content vocra\core\prepare\service.py`
+- `Get-Content vocra\core\prepare\writer.py`
+- `Get-Content vocra\core\prepare\sampler.py`
+- `Get-Content vocra\core\prepare\stitch.py`
+- `Get-Content vocra\core\prepare\frame_filter.py`
+- `Get-Content vocra\core\prepare\segmenter.py`
+- `Get-Content vocra\core\prepare\models.py`
+- `Get-Content tests\unit\test_prepare_project_sampling.py`
+- `Get-Content vocra\core\prepare\detectors\base.py`
+- `Get-Content vocra\core\prepare\crop.py`
+- `Get-Content vocra\core\prepare\config.py`
+- `Get-Content tests\unit\test_prepare_run_service.py`
+- `Get-Content tests\unit\test_prepare_writer.py`
+- `rg -n "from PIL|import PIL|Image\.fromarray|cv2\.imwrite|imwrite\(" vocra tests CLI`
+- `Get-ChildItem vocra\core\prepare -Name`
+- `Select-String -Path CLI\videocr\video.py -Pattern "prepare_stitch_batch|Image\.fromarray\(canvas\)|canvas\[|stitch" -Context 3,8 | Out-String -Width 240`
+- `Get-Content vocra\core\prepare\__init__.py`
+- `ruff check vocra tests legacy` -> initially failed because `vocra/core/prepare/writer.py` had an unused import, then passed after cleanup
+- `python -m unittest discover -s tests -p "test_*.py"` -> initially failed because `tests/unit/test_prepare_grids.py` underestimated the legacy batch-limit math, then passed after correcting the expectation, 77 tests
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `if (Test-Path docs/progress.md) { Get-Content -Raw docs/progress.md } else { '__MISSING__' }`
+- `rg --files`
+- `git status --short` -> failed because the workspace is not a Git repository.
+- `Get-Content -Raw pyproject.toml`
+- `Get-Content -Raw README.md`
+- `Get-ChildItem -Force | Select-Object Name,Mode,Length | Format-Table -AutoSize | Out-String -Width 200`
+- `Get-Content -Raw _version.py`
+- `if (Test-Path tests) { Get-ChildItem -Recurse tests | Select-Object FullName | Out-String -Width 200 } else { '__NO_TESTS_DIR__' }`
+- `python -m vocra.cli.main --version` -> passed, output `VOCra 1.5.1`
+- `pytest tests/unit/test_cli_version.py` -> failed because `pytest` command is not installed in this environment
+- `python -m pytest tests/unit/test_cli_version.py` -> failed because the `pytest` module is not installed in this environment
+- `ruff check vocra tests` -> passed
+- `Get-Content -Raw docs/progress.md`
+- `rg --files vocra tests`
+- `Get-Content -Raw vocra\cli\main.py`
+- `ruff check vocra tests` -> initially failed on import formatting in `vocra/core/project/__init__.py` and `vocra/core/project/workspace.py`, then passed after fixes
+- `python -m unittest discover -s tests -p "test_project_workspace.py"` -> initially ran 0 tests because discovery did not descend as expected before adding package markers
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 5 tests
+- `python -m vocra.cli.main project --help` -> passed
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `Get-Content -Raw docs/progress.md`
+- `Get-Content -Raw vocra\core\project\schema.py`
+- `Get-Content -Raw vocra\core\project\workspace.py`
+- `Get-Content -Raw vocra\core\project\__init__.py`
+- `ruff check vocra tests` -> initially failed on import formatting and one missing blank line, then passed after fixes
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 13 tests
+- `python -m vocra.cli.main --version` -> passed, output `VOCra 1.5.1`
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `Get-Content -Raw docs/progress.md`
+- `rg --files vocra tests`
+- `Get-Content -Raw vocra\cli\main.py`
+- `Get-Content -Raw vocra\core\project\__init__.py`
+- `ruff check vocra tests` -> initially failed on import formatting and `typing.Iterable`, then passed after fixes
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 18 tests
+- `python -m vocra.cli.main package --help` -> passed
+- `python -m vocra.cli.main package srt --project <temp fixture copy> --ocr-run fake` -> passed, produced package run output and report
+- `Get-Content -Raw <generated output.srt>` -> confirmed expected two-subtitle SRT content
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `Get-Content -Raw docs/progress.md`
+- `rg --files vocra\core\ocr vocra\cli tests\fixtures\projects\simple.vocra tests\unit`
+- `Get-Content -Raw vocra\core\ocr\models.py`
+- `Get-Content -Raw vocra\core\package\service.py`
+- `ruff check vocra tests` -> initially failed on import formatting in OCR modules, then passed after fixes
+- `python -m unittest discover -s tests -p "test_*.py"` -> initially failed on a resume test expectation, then passed after correcting the test
+- `python -m vocra.cli.main ocr --help` -> passed
+- `python -m vocra.cli.main ocr run --project <temp fixture copy> --backend fake` -> passed, produced OCR run artifacts
+- `python -m vocra.cli.main package srt --project <temp fixture copy> --ocr-run <generated fake run id>` -> passed after generating fake OCR output
+- `ruff check vocra tests` -> passed after final OCR service artifact-file update
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 24 tests
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `Get-Content -Raw docs/progress.md`
+- `Get-Content -Raw vocra\cli\ocr_cmd.py`
+- `Get-Content -Raw vocra\core\ocr\service.py`
+- `Get-Content -Raw vocra\core\ocr\registry.py`
+- `Get-Content -Raw vocra\core\ocr\backends\base.py`
+- `ruff check vocra tests` -> initially failed on import order and an unused import, then passed after fixes
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 29 tests
+- `python -m vocra.cli.main ocr run --help` -> passed
+- `Get-Content -Raw vocra\core\ocr\backends\openai_compatible.py`
+- `Get-Content -Raw vocra\core\ocr\backends\__init__.py`
+- `ruff check vocra tests` -> passed
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 33 tests
+- `python -m vocra.cli.main ocr run --help` -> passed
+- `Get-Content -Raw docs/Design.md`
+- `Get-Content -Raw docs/Agent.md`
+- `Get-Content -Raw docs/Product.md`
+- `Get-Content -Raw docs/Plan.md`
+- `Get-Content -Raw docs/progress.md`
+- `Get-Content -Raw vocra\core\ocr\backends\__init__.py`
+- `Get-Content -Raw vocra\core\ocr\registry.py`
+- `Get-Content -Raw vocra\cli\ocr_cmd.py`
+- `if (Test-Path vocra\core\ocr\backends\local_command.py) { Get-Content -Raw vocra\core\ocr\backends\local_command.py } else { '__MISSING__' }`
+- `ruff check vocra tests` -> initially failed on import order in `tests/unit/test_local_command_backend.py` and an unused variable in `vocra/core/ocr/backends/local_command.py`, then passed after fixes
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 39 tests
+- `python -m vocra.cli.main ocr run --help` -> passed
+- `Get-Content -Raw CLI\videocr\video.py`
+- `Get-Content -Raw CLI\videocr\utils.py`
+- `rg --files CLI legacy vocra\core\prepare tests` -> partially succeeded but reported that `legacy/` did not exist yet
+- `if (Test-Path legacy) { Get-ChildItem -Recurse legacy | Select-Object FullName | Out-String -Width 300 } else { '__NO_LEGACY_DIR__' }`
+- `Get-Content -Raw vocra\core\prepare\__init__.py`
+- `Get-Content -Raw vocra\core\prepare\models.py`
+- `Select-String -Path CLI\videocr\video.py -Pattern "crop_str|scale_str|get_srt_timestamp|get_ms_from_time_str|prepare_stitch_batch|unstitch_polygon|are_rect_lists_similar|process_ssim_group" -Context 2,4 | Out-String -Width 250`
+- `Get-Content -Raw vocra\core\video\__init__.py`
+- `Get-Content -Raw vocra\core\__init__.py`
+- `ruff check vocra tests legacy` -> initially failed on import order in `tests/unit/test_stitch_utils.py` and `vocra/core/prepare/__init__.py`, then passed after fixes
+- `python -m unittest discover -s tests -p "test_*.py"` -> initially failed because `test_compute_batch_limit_matches_legacy_grid_math` expected `98` instead of the correct legacy result `91`, then passed after correcting the test
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 56 tests
+- `Get-ChildItem -Recurse vocra\core\prepare | Select-Object FullName | Out-String -Width 300`
+- `Select-String -Path CLI\videocr\video.py -Pattern "text_detection|dt_polys|dt_scores|mapping|det_stitch_map|paddleocr text_detection" -Context 2,6 | Out-String -Width 260`
+- `Get-Content -Raw CLI\videocr\models.py`
+- `Select-String -Path CLI\videocr\video.py -Pattern "json.loads\\(line\\)|dt_polys|dt_scores|input_path" -Context 0,3 | Out-String -Width 220`
+- `ruff check vocra tests legacy` -> initially failed on import order in detector backend tests and one unused import in `vocra/core/prepare/detectors/base.py`, then passed after fixes
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 62 tests
+- `Get-Content docs\progress.md`
+- `Get-Content vocra\core\prepare\service.py`
+- `Get-Content tests\unit\test_prepare_segmenter.py`
+- `Get-Content vocra\core\prepare\segmenter.py`
+- `Get-Content tests\unit\test_prepare_service.py`
+- `ruff check vocra tests legacy` -> initially failed on import order in the new Prepare tests, then passed after fixes
+- `python -m unittest discover -s tests -p "test_*.py"` -> initially failed because `vocra/core/prepare/service.py` imported `Rect` from the wrong module and because one test rectangle shift exceeded the intended similarity tolerance, then passed after fixes, 68 tests
+- `Get-Content -Raw vocra\core\prepare\models.py`
+- `Get-Content -Raw vocra\core\prepare\service.py`
+- `Get-Content -Raw vocra\core\project\runs.py`
+- `Get-Content -Raw vocra\core\project\workspace.py`
+- `Get-Content -Raw vocra\core\project\schema.py`
+- `Get-Content -Raw vocra\core\project\jsonl.py`
+- `Get-Content -Raw vocra\core\project\manifest.py`
+- `Get-Content -Raw vocra\core\prepare\frame_filter.py`
+- `Get-Content -Raw vocra\core\prepare\segmenter.py`
+- `Get-Content -Raw vocra\core\prepare\detectors\base.py`
+- `Get-Content -Raw vocra\core\prepare\__init__.py`
+- `Get-ChildItem tests\unit | Select-Object Name | Out-String -Width 200`
+- `Get-Content -Raw vocra\core\ocr\service.py`
+- `Get-Content -Raw tests\unit\test_project_artifacts.py`
+- `Get-Content -Raw vocra\core\prepare\stitch.py`
+- `ruff check vocra tests legacy` -> passed
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 71 tests
+- `Select-String -Path CLI\videocr\video.py -Pattern "modulo =|frames_to_skip" -Context 1,2 | Out-String -Width 220`
+- `Get-Content -Raw tests\unit\test_prepare_writer.py`
+- `Get-Content -Raw tests\unit\test_prepare_run_service.py`
+- `Get-Content -Raw vocra\core\prepare\writer.py`
+- `Get-Content -Raw vocra\core\prepare\sampler.py`
+- `Get-Content -Raw tests\unit\test_prepare_sampler.py`
+- `rg "PrepareRunSummary\\(" -n`
+- `ruff check vocra tests legacy` -> initially failed on import formatting in `vocra/core/prepare/__init__.py`, then passed after fixes
+- `python -m unittest discover -s tests -p "test_*.py"` -> initially failed because one synthetic `numpy.uint8` fixture overflowed in `test_prepare_sampler.py`, then passed after fixing the test data, 74 tests
+- `Get-Content -Raw CLI\videocr\pyav_adapter.py`
+- `Get-Content -Raw vocra\core\video\probe.py`
+- `Get-Content -Raw vocra\core\prepare\__init__.py`
+- `Get-Content -Raw tests\unit\test_project_workspace.py`
+- `rg "from vocra\\.core\\.video import|import vocra\\.core\\.video|from vocra\\.core\\.video\\." -n vocra tests CLI`
+- `Get-Content -Raw vocra\core\video\__init__.py`
+- `ruff check vocra tests legacy` -> passed before runtime checks, then later initially failed on `vocra/core/video/__init__.py` because a lazy-export `__all__` triggered Ruff `F822`, then passed after simplifying `__init__.py`
+- `python -m unittest discover -s tests -p "test_*.py"` -> initially failed because eager imports in `vocra/core/video/__init__.py` created a circular import between `video.probe` and `project.workspace`, then passed after switching to lazy exports, 75 tests
+- `Get-Content -Raw docs\Plan.md`
+- `Get-Content -Raw docs\progress.md`
+- `Get-Content -Raw vocra\core\prepare\service.py`
+- `Get-Content -Raw vocra\core\prepare\sampler.py`
+- `Get-Content -Raw vocra\core\prepare\crop.py`
+- `Get-Content -Raw vocra\core\video\capture.py`
+- `ruff check vocra tests legacy` -> passed
+- `python -m unittest discover -s tests -p "test_*.py"` -> passed, 76 tests
+
+## Next Recommended Steps
+
+- Run a real interactive GUI smoke pass for the completed OCR workflow: open a project in the GUI, run fake OCR from the OCR tab, reload a saved run config, and verify selected artifact opening.
+- Run a real interactive GUI smoke pass for the completed Review compare workflow: open a project with at least two OCR runs, inspect candidate rows, apply winners, and confirm Review + Package reflect the chosen text.
+- Run a real interactive GUI smoke pass for the completed Package workflow: preview SRT, export SRT, open the output folder, and inspect package artifacts from the actual Package tab.
+- Decide whether the new `vocra/run.py` and `vocra/run.cmd` launchers should stay as dev-friendly convenience entrypoints only, or also be documented as supported local-start commands in future release docs.
+
+- Run a real interactive GUI smoke pass for the completed OCR workflow: open a project in the GUI, run fake OCR from the OCR tab, reload a saved run config, and verify selected artifact opening.
+- Run a real interactive GUI smoke pass for the completed Review compare workflow: open a project with at least two OCR runs, inspect candidate rows, apply winners, and confirm Review + Package reflect the chosen text.
+- Run a real interactive GUI smoke pass for the completed Package workflow: preview SRT, export SRT, open the output folder, and inspect package artifacts from the actual Package tab.
+- Decide whether to keep the legacy build/release script in place as a historical tool or replace it with a VOCra-native release script as part of Phase 20 packaging work.
+
+- Run a real interactive GUI smoke pass for the completed OCR workflow: open a project in the GUI, run fake OCR from the OCR tab, reload a saved run config, and verify selected artifact opening.
+- Run a real interactive GUI smoke pass for the completed Review compare workflow: open a project with at least two OCR runs, select multiple source runs, inspect candidate rows, apply winners, and confirm Review + Package reflect the chosen text.
+- Run a real interactive GUI smoke pass for the completed Package workflow: preview SRT, export SRT, open the output folder, and inspect package artifacts from the actual Package tab.
+- Decide whether `README.md` should later grow separate end-user release instructions after Phase 20 build/release packaging is more stable, or remain developer-first during migration.
+
+- Run a real interactive GUI smoke pass for the completed Review compare workflow: open a project with at least two OCR runs, select multiple source runs, inspect candidate rows for several segments, apply winners, and confirm the Review editor and Package preview react correctly.
+- Decide whether OCR runs with missing `input_prepare_id` should stay compare-eligible long term or whether a later migration/backfill step should make prepare-run metadata mandatory for comparison.
+- Add a lightweight interactive Package GUI smoke-check path that exercises fake-project preview, export, package-run selection, output-folder opening, and artifact opening from the actual tab.
+- Add a lightweight interactive OCR GUI smoke-check path that exercises fake OCR end-to-end from the actual tab: select prepare run, run fake OCR, select a run in the table, reload saved config, and open selected artifacts.
+- Add a lightweight interactive Review GUI smoke-check path that exercises item selection, image preview, raw-output fallback, shortcuts, and filter-based batch actions in a live GUI session.
+- Decide whether Package should eventually expose explicit review-artifact selection in the GUI, or keep review selection tied to the chosen OCR run plus `review_state_policy` as the intended long-term contract.
+- Decide whether OCR-tab smoke validation should be automated with a narrow GUI harness now or kept as an explicit manual checklist recorded in `docs/progress.md`.
+- Decide whether the OCR CLI should keep the new dedicated resume/rerun subcommands long term or collapse them back into a smaller flag-based surface if future command growth becomes noisy.
+- Decide whether the OCR runs table should eventually reintroduce `Prepare` as an optional column or keep that detail only in the selected-run pane now that `Edited` and `Created` are visible.
+- Decide whether the new selected-run config reuse path should eventually gain CLI parity through an inspect/export command, or remain GUI-only helper behavior.
+
+- Start detailed Phase 16 GUI OCR tab from `docs/Plan.md` through the existing service-first architecture: prepare-run selector, backend selector, backend config panel, run/resume actions, and OCR-run artifact visibility.
+- Add a lightweight real GUI smoke-check path for project create/open plus initial Prepare preview, because this session showed those user paths can still break even when unit tests are green.
+- Add a lightweight manual GUI smoke-check or automation that exercises create/open/recent-project flows directly, so completed Phase 13/14 behavior is verified by more than service/import tests.
+- Extend the GUI shell tabs one layer at a time by calling existing services rather than embedding prepare/ocr/package logic in widgets.
+- Decide whether package should eventually support choosing a different review artifact source explicitly, or whether keeping review state tied 1:1 to an OCR run is the intended long-term contract.
+- Decide whether backend `test_connection` should become a separate shared CLI surface before more OCR backends are added.
+- Install `pytest` in the development environment later so the same tests can also run under the intended toolchain.
+- Decide whether to introduce a VOCra-specific distribution name and console script in `pyproject.toml` now or later in the migration.
