@@ -1,1 +1,0 @@
-"""Core VOCra domain modules."""

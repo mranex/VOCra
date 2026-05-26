@@ -1,0 +1,142 @@
+QWidget {
+    background-color: #1a1a2e;
+    color: #e0e0e0;
+    font-family: "Segoe UI";
+    font-size: 10pt;
+}
+
+QMainWindow {
+    background-color: #1a1a2e;
+}
+
+QFrame#Sidebar {
+    background-color: #16213e;
+    border-right: 1px solid #0f3460;
+}
+
+QFrame#Card {
+    background-color: #16213e;
+    border: 1px solid #0f3460;
+    border-radius: 12px;
+}
+
+QFrame#VideoCard {
+    background-color: #0b162b;
+    border: 1px solid #0f3460;
+    border-radius: 12px;
+}
+
+QPushButton,
+QToolButton {
+    background-color: #0f3460;
+    color: #e0e0e0;
+    border: 1px solid #00bcd4;
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
+QPushButton:hover,
+QToolButton:hover {
+    background-color: #124876;
+}
+
+QPushButton:pressed,
+QToolButton:pressed {
+    background-color: #0b2842;
+}
+
+QPushButton:disabled,
+QToolButton:disabled {
+    border-color: #555555;
+    color: #888888;
+    background-color: #202a3a;
+}
+
+QToolButton[nav="true"] {
+    text-align: left;
+    padding: 10px 14px;
+    font-weight: 600;
+}
+
+QToolButton[active="true"] {
+    background-color: #00bcd4;
+    color: #0b1725;
+}
+
+QLineEdit,
+QPlainTextEdit,
+QTextEdit,
+QSpinBox,
+QDoubleSpinBox,
+QComboBox,
+QTableWidget,
+QListWidget {
+    background-color: #0f3460;
+    border: 1px solid #28527a;
+    border-radius: 8px;
+    padding: 6px;
+    color: #e0e0e0;
+}
+
+QLineEdit:read-only {
+    color: #b6c3d1;
+    background-color: #183252;
+}
+
+QLabel[muted="true"] {
+    color: #91a0b0;
+}
+
+QHeaderView::section {
+    background-color: #0f3460;
+    color: #e0e0e0;
+    border: 0;
+    border-right: 1px solid #16213e;
+    padding: 6px;
+}
+
+QTableWidget {
+    gridline-color: #22425f;
+}
+
+QProgressBar {
+    border: 1px solid #28527a;
+    border-radius: 8px;
+    background-color: #0f3460;
+    text-align: center;
+}
+
+QProgressBar::chunk {
+    background-color: #00bcd4;
+    border-radius: 6px;
+}
+
+QScrollBar:vertical {
+    background-color: #16213e;
+    width: 12px;
+}
+
+QScrollBar::handle:vertical {
+    background-color: #00bcd4;
+    border-radius: 6px;
+    min-height: 24px;
+}
+
+QRadioButton,
+QCheckBox {
+    spacing: 8px;
+}
+
+QGroupBox {
+    border: 1px solid #0f3460;
+    border-radius: 10px;
+    margin-top: 12px;
+    padding-top: 14px;
+    font-weight: 600;
+}
+
+QGroupBox::title {
+    subcontrol-origin: margin;
+    left: 12px;
+    padding: 0 6px;
+}

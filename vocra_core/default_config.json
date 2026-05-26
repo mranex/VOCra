@@ -1,0 +1,43 @@
+{
+  "final_ocr": {
+    "provider": "llama_cpp",
+    "server_url": "http://127.0.0.1:8080",
+    "model": "paddleocr-vl",
+    "timeout": 120,
+    "temperature": 0,
+    "max_tokens": 512,
+    "prompt": "OCR:",
+    "repeat_penalty": 1.2,
+    "repeat_last_n": -1,
+    "max_retries": 3,
+    "clear_cache_interval": 1,
+    "llama_cpp_dir": "tools/",
+    "model_path": "models/paddleocr_vl/model.gguf",
+    "mmproj_path": "models/paddleocr_vl/mmproj.gguf",
+    "gpu_layers": 99,
+    "ctx_size": 8192,
+    "parallel_slots": 1,
+    "chrome_lens_language": "auto",
+    "chrome_lens_headless": true,
+    "chrome_lens_max_retries": 3,
+    "chrome_path": "",
+    "user_data_dir": ""
+  },
+  "translator": {
+    "enabled": false,
+    "provider": "openai_compatible",
+    "base_url": "",
+    "api_key": "",
+    "model": "",
+    "source_lang": "auto",
+    "target_lang": "vi",
+    "batch_size": 300,
+    "timeout": 120,
+    "temperature": 0.3,
+    "max_tokens": 4096,
+    "style": "default",
+    "custom_prompt": "",
+    "json_mode": true,
+    "max_retries": 2
+  }
+}
