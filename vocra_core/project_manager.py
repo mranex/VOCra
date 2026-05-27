@@ -26,6 +26,7 @@ def create_project(
         "project_name": project_path.name,
         "video_path": str(video_file),
         "project_dir": str(project_path),
+        "video_context": "",
         "subtitle_crop": _normalize_crop(subtitle_crop),
         "frame_extract": {
             "interval_sec": float(frame_interval),
@@ -35,6 +36,7 @@ def create_project(
         },
         "cache_files": {
             "timestamp": "cache/timestamp.json",
+            "ssim_filter": "cache/ssim_filter.json",
             "ocr_origin": "cache/ocr_og.json",
             "segments": "cache/segments.json",
             "ocr_final": "cache/ocr_fn.json",
@@ -44,6 +46,7 @@ def create_project(
             "setup_done": True,
             "frames_extracted": False,
             "cropped_done": False,
+            "ssim_filtered": False,
             "ocr_origin_done": False,
             "segments_done": False,
             "preprocessed_done": False,
@@ -55,6 +58,8 @@ def create_project(
             "provider": "paddleocr",
             "language": "auto",
         },
+        "ssim_filter": deepcopy(defaults.get("ssim_filter", {"enabled": True, "threshold": 0.95})),
+        "segmenter": deepcopy(defaults.get("segmenter", {"similarity_threshold": 0.5, "blank_tolerance": 1})),
         "final_ocr": deepcopy(defaults["final_ocr"]),
         "translator": deepcopy(defaults["translator"]),
     }
@@ -69,7 +74,8 @@ def load_project(project_dir: str) -> dict:
         raise FileNotFoundError(f"progress.json not found in {progress_path.parent}")
 
     with progress_path.open("r", encoding="utf-8") as handle:
-        return json.load(handle)
+        progress = json.load(handle)
+    return _normalize_progress_schema(progress)
 
 
 def update_status(project_dir: str, step: str, value: bool) -> None:
@@ -95,9 +101,10 @@ def save_progress(project_dir: str, progress: dict) -> None:
     project_path = _project_path(project_dir)
     project_path.mkdir(parents=True, exist_ok=True)
 
+    normalized = _normalize_progress_schema(progress)
     progress_path = project_path / PROGRESS_FILENAME
     with progress_path.open("w", encoding="utf-8") as handle:
-        json.dump(progress, handle, indent=2)
+        json.dump(normalized, handle, indent=2)
         handle.write("\n")
 
 
@@ -105,6 +112,54 @@ def _load_default_config() -> dict:
     config_path = Path(__file__).with_name("default_config.json")
     with config_path.open("r", encoding="utf-8") as handle:
         return json.load(handle)
+
+
+def _normalize_progress_schema(progress: dict) -> dict:
+    normalized = deepcopy(progress)
+    defaults = _load_default_config()
+    normalized.setdefault("video_context", "")
+
+    cache_files = normalized.setdefault("cache_files", {})
+    cache_files.setdefault("timestamp", "cache/timestamp.json")
+    cache_files.setdefault("ssim_filter", "cache/ssim_filter.json")
+    cache_files.setdefault("ocr_origin", "cache/ocr_og.json")
+    cache_files.setdefault("segments", "cache/segments.json")
+    cache_files.setdefault("ocr_final", "cache/ocr_fn.json")
+    cache_files.setdefault("translation", "cache/translation.json")
+
+    status = normalized.setdefault("status", {})
+    status.setdefault("setup_done", True)
+    status.setdefault("frames_extracted", False)
+    status.setdefault("cropped_done", False)
+    status.setdefault("ssim_filtered", False)
+    status.setdefault("ocr_origin_done", False)
+    status.setdefault("segments_done", False)
+    status.setdefault("preprocessed_done", False)
+    status.setdefault("ocr_final_done", False)
+    status.setdefault("translation_done", False)
+    status.setdefault("export_done", False)
+
+    draft_ocr = normalized.setdefault("draft_ocr", {})
+    draft_ocr.setdefault("provider", "paddleocr")
+    draft_ocr.setdefault("language", "auto")
+
+    ssim_filter = normalized.setdefault("ssim_filter", {})
+    for key, value in defaults.get("ssim_filter", {}).items():
+        ssim_filter.setdefault(key, deepcopy(value))
+
+    segmenter = normalized.setdefault("segmenter", {})
+    for key, value in defaults.get("segmenter", {}).items():
+        segmenter.setdefault(key, deepcopy(value))
+
+    final_ocr = normalized.setdefault("final_ocr", {})
+    for key, value in defaults.get("final_ocr", {}).items():
+        final_ocr.setdefault(key, deepcopy(value))
+
+    translator = normalized.setdefault("translator", {})
+    for key, value in defaults.get("translator", {}).items():
+        translator.setdefault(key, deepcopy(value))
+
+    return normalized
 
 
 def _normalize_crop(subtitle_crop: dict) -> dict:

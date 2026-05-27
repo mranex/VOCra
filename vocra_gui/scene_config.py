@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QMessageBox,
+    QPlainTextEdit,
     QPushButton,
     QScrollArea,
     QSpinBox,
@@ -36,6 +37,7 @@ class ConfigScene(QWidget):
         self.container_layout.setSpacing(14)
 
         self._build_draft_group()
+        self._build_segmenter_group()
         self._build_final_group()
         self._build_translator_group()
 
@@ -56,10 +58,21 @@ class ConfigScene(QWidget):
         self.save_button.setEnabled(True)
         global_config = self.main_window.global_config
         draft = global_config.get("draft_ocr", {})
+        ssim_filter = global_config.get("ssim_filter", {})
+        segmenter = global_config.get("segmenter", {})
         final = global_config.get("final_ocr", {})
         translator = global_config.get("translator", {})
 
         self._set_combo_data(self.draft_language_combo, draft.get("language", "auto"))
+        self.ssim_enabled_check.setChecked(bool(ssim_filter.get("enabled", True)))
+        self.ssim_threshold_spin.setValue(float(ssim_filter.get("threshold", 0.95) or 0.95))
+        self.segment_similarity_spin.setValue(float(segmenter.get("similarity_threshold", 0.5) or 0.5))
+        self.segment_blank_tolerance_spin.setValue(int(segmenter.get("blank_tolerance", 1) or 1))
+        self.segment_ssim_cross_check_check.setChecked(bool(segmenter.get("ssim_cross_check", True)))
+        self.segment_ssim_same_spin.setValue(float(segmenter.get("ssim_same_threshold", 0.7) or 0.7))
+        self.segment_ssim_override_spin.setValue(float(segmenter.get("ssim_override_threshold", 0.9) or 0.9))
+        self.segment_use_sharpness_check.setChecked(bool(segmenter.get("use_sharpness_representative", True)))
+        self.segment_use_text_voting_check.setChecked(bool(segmenter.get("use_text_voting", True)))
         self._set_combo_data(self.final_provider_combo, final.get("provider", "llama_cpp"))
         self.final_server_url_edit.setText(str(final.get("server_url", "")))
         self.final_model_edit.setText(str(final.get("model", "")))
@@ -88,11 +101,24 @@ class ConfigScene(QWidget):
         self.translator_batch_spin.setValue(int(translator.get("batch_size", 300) or 300))
         self.translator_timeout_spin.setValue(int(translator.get("timeout", 120) or 120))
         self._set_combo_data(self.translator_style_combo, translator.get("style", "default"))
+        self.translator_custom_prompt_edit.setPlainText(str(translator.get("custom_prompt", "") or ""))
         self._update_provider_visibility()
+        self._update_translator_prompt_visibility()
 
     def save_config(self) -> None:
         config = deepcopy(self.main_window.global_config)
+        config.setdefault("ssim_filter", {})
+        config.setdefault("segmenter", {})
         config["draft_ocr"]["language"] = self.draft_language_combo.currentData()
+        config["ssim_filter"]["enabled"] = self.ssim_enabled_check.isChecked()
+        config["ssim_filter"]["threshold"] = float(self.ssim_threshold_spin.value())
+        config["segmenter"]["similarity_threshold"] = float(self.segment_similarity_spin.value())
+        config["segmenter"]["blank_tolerance"] = int(self.segment_blank_tolerance_spin.value())
+        config["segmenter"]["ssim_cross_check"] = self.segment_ssim_cross_check_check.isChecked()
+        config["segmenter"]["ssim_same_threshold"] = float(self.segment_ssim_same_spin.value())
+        config["segmenter"]["ssim_override_threshold"] = float(self.segment_ssim_override_spin.value())
+        config["segmenter"]["use_sharpness_representative"] = self.segment_use_sharpness_check.isChecked()
+        config["segmenter"]["use_text_voting"] = self.segment_use_text_voting_check.isChecked()
 
         final = config["final_ocr"]
         final["provider"] = self.final_provider_combo.currentData()
@@ -125,6 +151,7 @@ class ConfigScene(QWidget):
         translator["batch_size"] = int(self.translator_batch_spin.value())
         translator["timeout"] = int(self.translator_timeout_spin.value())
         translator["style"] = self.translator_style_combo.currentData()
+        translator["custom_prompt"] = self.translator_custom_prompt_edit.toPlainText().strip()
 
         self.main_window.save_global_app_config(config)
         QMessageBox.information(
@@ -142,7 +169,60 @@ class ConfigScene(QWidget):
         for code, label in [("auto", "Auto"), ("ja", "Japanese"), ("zh", "Chinese"), ("en", "English")]:
             self.draft_language_combo.addItem(label, code)
         layout.addRow("Draft OCR Language", self.draft_language_combo)
-        self.container_layout.addWidget(_with_title("Draft OCR", frame))
+        self.ssim_enabled_check = QCheckBox("Enable SSIM pre-filter")
+        self.ssim_threshold_spin = QDoubleSpinBox()
+        self.ssim_threshold_spin.setRange(0.80, 1.00)
+        self.ssim_threshold_spin.setDecimals(2)
+        self.ssim_threshold_spin.setSingleStep(0.01)
+        self.ssim_threshold_spin.setValue(0.95)
+        self.ssim_threshold_spin.setToolTip("Higher = only nearly identical frames are skipped before Draft OCR.")
+        layout.addRow("SSIM Filter", self.ssim_enabled_check)
+        layout.addRow("SSIM Threshold", self.ssim_threshold_spin)
+        self.container_layout.addWidget(_with_title("Draft OCR + SSIM", frame))
+
+    def _build_segmenter_group(self) -> None:
+        frame = QFrame()
+        frame.setObjectName("Card")
+        layout = QFormLayout(frame)
+        layout.setContentsMargins(16, 16, 16, 16)
+
+        self.segment_similarity_spin = QDoubleSpinBox()
+        self.segment_similarity_spin.setRange(0.0, 1.0)
+        self.segment_similarity_spin.setDecimals(2)
+        self.segment_similarity_spin.setSingleStep(0.05)
+        self.segment_similarity_spin.setValue(0.5)
+
+        self.segment_blank_tolerance_spin = QSpinBox()
+        self.segment_blank_tolerance_spin.setRange(0, 10)
+        self.segment_blank_tolerance_spin.setValue(1)
+        self.segment_blank_tolerance_spin.setToolTip(
+            "So blank frames lien tiep cho phep truoc khi dong segment. 0 = dong ngay."
+        )
+        self.segment_ssim_cross_check_check = QCheckBox("Enable SSIM cross-check")
+        self.segment_ssim_same_spin = QDoubleSpinBox()
+        self.segment_ssim_same_spin.setRange(0.5, 1.0)
+        self.segment_ssim_same_spin.setDecimals(2)
+        self.segment_ssim_same_spin.setSingleStep(0.05)
+        self.segment_ssim_same_spin.setValue(0.7)
+
+        self.segment_ssim_override_spin = QDoubleSpinBox()
+        self.segment_ssim_override_spin.setRange(0.5, 1.0)
+        self.segment_ssim_override_spin.setDecimals(2)
+        self.segment_ssim_override_spin.setSingleStep(0.05)
+        self.segment_ssim_override_spin.setValue(0.9)
+        self.segment_use_sharpness_check = QCheckBox("Use sharpness-based representative selection")
+        self.segment_use_sharpness_check.setChecked(True)
+        self.segment_use_text_voting_check = QCheckBox("Enable text voting")
+        self.segment_use_text_voting_check.setChecked(True)
+
+        layout.addRow("Text Similarity", self.segment_similarity_spin)
+        layout.addRow("Blank Tolerance", self.segment_blank_tolerance_spin)
+        layout.addRow("SSIM Cross-check", self.segment_ssim_cross_check_check)
+        layout.addRow("SSIM Same Threshold", self.segment_ssim_same_spin)
+        layout.addRow("SSIM Override Threshold", self.segment_ssim_override_spin)
+        layout.addRow("Sharpness Representative", self.segment_use_sharpness_check)
+        layout.addRow("Text Voting", self.segment_use_text_voting_check)
+        self.container_layout.addWidget(_with_title("Segmenter", frame))
 
     def _build_final_group(self) -> None:
         self.final_section = QWidget()
@@ -281,8 +361,31 @@ class ConfigScene(QWidget):
         self.translator_timeout_spin = QSpinBox()
         self.translator_timeout_spin.setRange(1, 3600)
         self.translator_style_combo = QComboBox()
-        for value in ("default", "formal", "casual", "keep_honorifics", "literal"):
-            self.translator_style_combo.addItem(value, value)
+        for label, value in (
+            ("Balanced Subtitle", "default"),
+            ("Comedy / Punchy", "comedy_punchy"),
+            ("Faithful + Natural", "faithful_natural"),
+            ("Short / Readable", "short_readable"),
+            ("Dramatic / Cinematic", "dramatic_cinematic"),
+            ("Honorific-aware", "honorifics_cultural"),
+            ("Formal (Legacy)", "formal"),
+            ("Casual (Legacy)", "casual"),
+            ("Keep Honorifics (Legacy)", "keep_honorifics"),
+            ("Literal (Legacy)", "literal"),
+            ("Custom Prompt", "custom"),
+        ):
+            self.translator_style_combo.addItem(label, value)
+        self.translator_style_combo.currentIndexChanged.connect(self._update_translator_prompt_visibility)
+        self.translator_custom_prompt_edit = QPlainTextEdit()
+        self.translator_custom_prompt_edit.setPlaceholderText(
+            "Used only when Style = Custom Prompt.\n"
+            "Write role, rules, tone, forbidden behaviors, terminology preferences, etc."
+        )
+        self.translator_custom_prompt_edit.setFixedHeight(140)
+        self.translator_custom_prompt_hint = QLabel(
+            "Prompt sent to the model will use either: selected Style + project video info, or Custom Prompt + project video info."
+        )
+        self.translator_custom_prompt_hint.setWordWrap(True)
 
         layout.addRow("Provider", self.translator_provider_combo)
         layout.addRow("Base URL", self.translator_base_url_edit)
@@ -293,6 +396,8 @@ class ConfigScene(QWidget):
         layout.addRow("Batch Size", self.translator_batch_spin)
         layout.addRow("Timeout", self.translator_timeout_spin)
         layout.addRow("Style", self.translator_style_combo)
+        layout.addRow("Custom Prompt", self.translator_custom_prompt_edit)
+        layout.addRow(self.translator_custom_prompt_hint)
         note = QLabel("API key is stored in a user-local config file outside this repo.")
         note.setWordWrap(True)
         layout.addRow(note)
@@ -345,6 +450,17 @@ class ConfigScene(QWidget):
         index = combo.findData(value)
         if index >= 0:
             combo.setCurrentIndex(index)
+        elif combo.count() > 0:
+            combo.setCurrentIndex(0)
+
+    def _update_translator_prompt_visibility(self) -> None:
+        is_custom = self.translator_style_combo.currentData() == "custom"
+        self.translator_custom_prompt_edit.setEnabled(is_custom)
+        self.translator_custom_prompt_hint.setText(
+            "Prompt sent to the model will use: Custom Prompt + project video info."
+            if is_custom
+            else "Prompt sent to the model will use: selected Style preset + project video info."
+        )
 
 
 def _with_title(title: str, widget: QWidget) -> QWidget:

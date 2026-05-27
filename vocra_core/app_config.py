@@ -68,15 +68,21 @@ def merge_global_config_into_progress(progress: dict[str, Any], global_config: d
     merged = deepcopy(progress)
 
     merged.setdefault("draft_ocr", {})
+    merged.setdefault("ssim_filter", {})
+    merged.setdefault("segmenter", {})
     merged.setdefault("final_ocr", {})
     merged.setdefault("translator", {})
 
     draft_config = deepcopy(global_config.get("draft_ocr", {}))
+    ssim_filter_config = deepcopy(global_config.get("ssim_filter", {}))
+    segmenter_config = deepcopy(global_config.get("segmenter", {}))
     final_config = deepcopy(global_config.get("final_ocr", {}))
     translator_config = deepcopy(global_config.get("translator", {}))
     translator_config.pop("api_key", None)
 
     merged["draft_ocr"].update(draft_config)
+    merged["ssim_filter"].update(ssim_filter_config)
+    merged["segmenter"].update(segmenter_config)
     merged["final_ocr"].update(final_config)
     merged["translator"].update(translator_config)
     merged["translator"].pop("api_key", None)
@@ -113,13 +119,15 @@ def _default_global_config() -> dict[str, Any]:
             "provider": "paddleocr",
             "language": "auto",
         },
+        "ssim_filter": deepcopy(defaults.get("ssim_filter", {"enabled": True, "threshold": 0.95})),
+        "segmenter": deepcopy(defaults.get("segmenter", {"similarity_threshold": 0.5, "blank_tolerance": 1})),
         "final_ocr": deepcopy(defaults["final_ocr"]),
         "translator": deepcopy(defaults["translator"]),
     }
 
 
 def _merge_sections(target: dict[str, Any], source: dict[str, Any]) -> None:
-    for section_name in ("draft_ocr", "final_ocr", "translator"):
+    for section_name in ("draft_ocr", "ssim_filter", "segmenter", "final_ocr", "translator"):
         source_section = source.get(section_name, {})
         if not isinstance(source_section, dict):
             continue

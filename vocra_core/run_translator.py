@@ -29,9 +29,18 @@ def run_translation(
     if not ocr_items:
         raise RuntimeError("No final OCR items found for translation")
 
+    signature = build_translation_signature(progress)
     translation_payload = _load_translation_payload(translation_path, progress["translator"])
-    items_by_segment = {int(item["segment_id"]): item for item in translation_payload["items"]}
-    translator = create_translator(progress["translator"])
+    signature_matches = translation_payload_matches(translation_payload, signature)
+    items_by_segment = (
+        {int(item["segment_id"]): item for item in translation_payload["items"]}
+        if signature_matches and not force
+        else {}
+    )
+    translator = create_translator(
+        progress["translator"],
+        video_context=str(progress.get("video_context", "") or ""),
+    )
 
     source_lang = str(progress["translator"].get("source_lang", "auto") or "auto")
     target_lang = str(progress["translator"].get("target_lang", "vi") or "vi")
@@ -86,6 +95,7 @@ def run_translation(
             source_lang=source_lang,
             target_lang=target_lang,
             items_by_segment=items_by_segment,
+            signature=signature,
         )
         if callback:
             callback(batch_index + 1, total_batches, f"Batch {batch_index + 1} done")
@@ -94,11 +104,34 @@ def run_translation(
     return len(items_by_segment)
 
 
+def build_translation_signature(progress: dict) -> dict:
+    translator_config = progress.get("translator", {})
+    style = str(translator_config.get("style", "default") or "default")
+    custom_prompt = str(translator_config.get("custom_prompt", "") or "").strip() if style == "custom" else ""
+    return {
+        "provider": str(translator_config.get("provider", "openai_compatible") or "openai_compatible"),
+        "model": str(translator_config.get("model", "") or "").strip(),
+        "source_lang": str(translator_config.get("source_lang", "auto") or "auto"),
+        "target_lang": str(translator_config.get("target_lang", "vi") or "vi"),
+        "style": style,
+        "custom_prompt": custom_prompt,
+        "video_context": str(progress.get("video_context", "") or "").strip(),
+    }
+
+
+def translation_payload_matches(payload: dict, signature: dict) -> bool:
+    payload_signature = payload.get("signature", {})
+    if not isinstance(payload_signature, dict):
+        return False
+    return payload_signature == signature
+
+
 def _load_translation_payload(translation_path: Path, config: dict) -> dict:
     if not translation_path.exists():
         return {
             "source_lang": str(config.get("source_lang", "auto") or "auto"),
             "target_lang": str(config.get("target_lang", "vi") or "vi"),
+            "signature": {},
             "items": [],
         }
     with translation_path.open("r", encoding="utf-8") as handle:
@@ -109,6 +142,7 @@ def _load_translation_payload(translation_path: Path, config: dict) -> dict:
     return {
         "source_lang": str(data.get("source_lang", config.get("source_lang", "auto"))),
         "target_lang": str(data.get("target_lang", config.get("target_lang", "vi"))),
+        "signature": data.get("signature", {}),
         "items": items,
     }
 
@@ -119,12 +153,14 @@ def _save_translation_payload(
     source_lang: str,
     target_lang: str,
     items_by_segment: dict[int, dict],
+    signature: dict,
 ) -> None:
     translation_path.parent.mkdir(parents=True, exist_ok=True)
     items = [items_by_segment[key] for key in sorted(items_by_segment)]
     payload = {
         "source_lang": source_lang,
         "target_lang": target_lang,
+        "signature": signature,
         "items": items,
     }
     with translation_path.open("w", encoding="utf-8") as handle:

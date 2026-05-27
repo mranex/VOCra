@@ -88,8 +88,8 @@ class VideoPreview(QWidget):
         self.video_size_changed.emit(self._video_width, self._video_height)
 
         self.seek_to(0)
-        self._set_paused(False)
-        self._timer.start(max(15, int(1000 / max(self._fps, 1.0))))
+        self._timer.stop()
+        self._set_paused(True)
         self.video_loaded.emit(self._source_path)
 
     def source_path(self) -> str:

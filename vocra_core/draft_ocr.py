@@ -45,6 +45,7 @@ def _run_draft_ocr_internal(project_dir: str, callback: ProgressCallback | None 
 
     payload = _load_ocr_payload(ocr_path)
     items_by_image = {item["image"]: item for item in payload["items"]}
+    unique_frames, frame_map = _load_ssim_filter_plan(progress, project_path)
     provider = create_draft_provider(progress["draft_ocr"])
 
     new_items = 0
@@ -56,6 +57,23 @@ def _run_draft_ocr_internal(project_dir: str, callback: ProgressCallback | None 
                 if callback:
                     callback(index, total, f"skip {image_name}")
                 continue
+
+            if unique_frames is not None and image_name not in unique_frames:
+                leader = frame_map.get(image_name, "")
+                leader_item = items_by_image.get(leader)
+                if leader_item:
+                    items_by_image[image_name] = {
+                        "image": image_name,
+                        "text": leader_item.get("text", ""),
+                        "confidence": float(leader_item.get("confidence", 0.0) or 0.0),
+                        "inherited_from": leader,
+                    }
+                    new_items += 1
+                    if new_items % 50 == 0:
+                        _save_ocr_payload(ocr_path, items_by_image)
+                    if callback:
+                        callback(index, total, f"inherit {image_name} <= {leader}")
+                    continue
 
             text, confidence = provider.recognize(str(image_path))
             items_by_image[image_name] = {
@@ -130,6 +148,41 @@ def _load_ocr_payload(ocr_path: Path) -> dict:
     if not isinstance(items, list):
         raise ValueError(f"Invalid OCR payload format in {ocr_path}")
     return {"items": items}
+
+
+def _load_ssim_filter_plan(progress: dict, project_path: Path) -> tuple[set[str] | None, dict[str, str]]:
+    if not progress.get("status", {}).get("ssim_filtered", False):
+        return None, {}
+
+    current_config = progress.get("ssim_filter", {})
+    current_enabled = bool(current_config.get("enabled", True))
+    current_threshold = float(current_config.get("threshold", 0.95))
+    if not current_enabled:
+        return None, {}
+
+    cache_key = progress.get("cache_files", {}).get("ssim_filter", "cache/ssim_filter.json")
+    ssim_filter_path = project_path / cache_key
+    if not ssim_filter_path.exists():
+        return None, {}
+
+    try:
+        with ssim_filter_path.open("r", encoding="utf-8") as handle:
+            payload = json.load(handle)
+    except Exception:
+        return None, {}
+
+    unique_frames = payload.get("unique_frames", [])
+    frame_map = payload.get("frame_map", {})
+    payload_enabled = bool(payload.get("enabled", True))
+    payload_threshold = float(payload.get("threshold", 0.95))
+    if not isinstance(unique_frames, list) or not isinstance(frame_map, dict):
+        return None, {}
+    if not payload_enabled:
+        return None, {}
+    if abs(payload_threshold - current_threshold) > 1e-9:
+        return None, {}
+
+    return set(str(name) for name in unique_frames), {str(key): str(value) for key, value in frame_map.items()}
 
 
 def _save_ocr_payload(ocr_path: Path, items_by_image: dict[str, dict]) -> None:

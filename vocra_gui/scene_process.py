@@ -20,6 +20,7 @@ from vocra_core.frame_extractor import extract_frames
 from vocra_core.preprocessor import preprocess_representatives
 from vocra_core.run_final_ocr import run_final_ocr
 from vocra_core.segmenter import build_segments
+from vocra_core.ssim_filter import filter_frames_by_ssim
 from vocra_gui.widgets.log_panel import LogPanel
 from vocra_gui.widgets.progress_bar import PipelineProgressBar
 from vocra_gui.workers import TaskWorker
@@ -92,6 +93,13 @@ class ProcessScene(QWidget):
         self.draft_button.setEnabled(enabled and self._worker is None)
         self.final_button.setEnabled(enabled and self._worker is None)
         self.pipeline_bar.set_statuses(self._statuses_from_progress(progress or {}))
+        if not enabled:
+            self._draft_images = []
+            self._final_images = []
+            self.preview_image.clear()
+            self.preview_image.setText("No preview")
+            self.preview_text.setText("OCR text preview will appear here.")
+            self.log_panel.clear()
 
     def start_prepare(self) -> None:
         if not self.main_window.project_dir:
@@ -100,6 +108,7 @@ class ProcessScene(QWidget):
         def task(callback):
             extract_frames(self.main_window.project_dir, callback=lambda c, t, m: callback(c, t, f"Extract: {m}"))
             crop_frames(self.main_window.project_dir, callback=lambda c, t, m: callback(c, t, f"Crop: {m}"))
+            filter_frames_by_ssim(self.main_window.project_dir, callback=lambda c, t, m: callback(c, t, f"SSIM: {m}"))
 
         self._active_task = "prepare"
         self.log_panel.append_log("Starting Prepare pipeline...")
@@ -188,6 +197,7 @@ class ProcessScene(QWidget):
         statuses = [
             "done" if status.get("frames_extracted") else "pending",
             "done" if status.get("cropped_done") else "pending",
+            "done" if status.get("ssim_filtered") else "pending",
             "done" if status.get("ocr_origin_done") else "pending",
             "done" if status.get("segments_done") else "pending",
             "done" if status.get("preprocessed_done") else "pending",
@@ -198,13 +208,15 @@ class ProcessScene(QWidget):
                 statuses[0] = "running"
             elif statuses[1] != "done":
                 statuses[1] = "running"
-        elif running_task == "draft":
-            if statuses[2] != "done":
+            elif statuses[2] != "done":
                 statuses[2] = "running"
-            elif statuses[3] != "done":
+        elif running_task == "draft":
+            if statuses[3] != "done":
                 statuses[3] = "running"
             elif statuses[4] != "done":
                 statuses[4] = "running"
-        elif running_task == "final" and statuses[5] != "done":
-            statuses[5] = "running"
+            elif statuses[5] != "done":
+                statuses[5] = "running"
+        elif running_task == "final" and statuses[6] != "done":
+            statuses[6] = "running"
         return statuses

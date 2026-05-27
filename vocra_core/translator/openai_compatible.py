@@ -17,13 +17,14 @@ class OpenAICompatibleTranslator(BaseTranslator):
         model: str,
         custom_prompt: str = "",
         style: str = "default",
+        video_context: str = "",
         temperature: float = 0.3,
         max_tokens: int = 4096,
         timeout: int = 120,
         json_mode: bool = True,
         max_retries: int = 2,
     ) -> None:
-        super().__init__(custom_prompt=custom_prompt, style=style)
+        super().__init__(custom_prompt=custom_prompt, style=style, video_context=video_context)
         self.base_url = str(base_url or "").strip().rstrip("/")
         if not self.base_url:
             raise ValueError("translator.base_url is required.")
@@ -62,10 +63,7 @@ class OpenAICompatibleTranslator(BaseTranslator):
     def _build_messages(self, texts: list[str], *, source: str, target: str) -> list[dict[str, str]]:
         source_name = self.get_lang_name(source, source or "Auto-detect")
         target_name = self.get_lang_name(target, target or "Vietnamese")
-        system_prompt = (
-            f"You are a subtitle translator. Translate from {source_name} to {target_name}."
-            f"{self.build_style_instructions()}"
-        ).strip()
+        system_prompt = self.build_system_prompt(source_lang=source_name, target_lang=target_name)
         request_payload = {
             "items": [{"index": index, "text": str(text or "")} for index, text in enumerate(texts)]
         }

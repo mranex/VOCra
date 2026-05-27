@@ -1,0 +1,38 @@
+{
+  "project_name": "subtitle_2",
+  "project_dir": "C:\\Nghich\\vocra\\vocra_translator\\projects\\subtitle_2",
+  "created_at": "2026-05-27T04:17:03Z",
+  "updated_at": "2026-05-27T04:17:03Z",
+  "source_file": {
+    "original_path": "C:\\Users\\Admin\\Downloads\\subtitle.srt",
+    "copied_path": "source/subtitle.srt",
+    "format": "srt"
+  },
+  "cache_files": {
+    "document": "cache/document.json",
+    "translation": "cache/translation.json"
+  },
+  "exports_dir": "exports",
+  "context": "",
+  "status": {
+    "imported": true,
+    "translation_done": false,
+    "export_done": false
+  },
+  "translator": {
+    "enabled": false,
+    "provider": "openai_compatible",
+    "base_url": "",
+    "model": "",
+    "source_lang": "auto",
+    "target_lang": "vi",
+    "batch_size": 300,
+    "timeout": 120,
+    "temperature": 0.3,
+    "max_tokens": 4096,
+    "style": "default",
+    "custom_prompt": "",
+    "json_mode": true,
+    "max_retries": 2
+  }
+}

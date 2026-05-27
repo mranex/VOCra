@@ -102,13 +102,14 @@ class CropOverlay(QWidget):
             return
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        pen_color = QColor("#4caf50") if self._locked else QColor("#ffd54f")
+        pen_color = QColor("#00f0ff") if self._locked else QColor("#ff007f")
         pen_style = Qt.PenStyle.SolidLine if self._locked else Qt.PenStyle.DashLine
-        fill_color = QColor(76, 175, 80, 40) if self._locked else QColor(255, 213, 79, 36)
+        fill_color = QColor(0, 240, 255, 32) if self._locked else QColor(255, 0, 127, 24)
         pen = QPen(pen_color, 2, pen_style)
         painter.setPen(pen)
         painter.setBrush(fill_color)
         painter.drawRect(self._rect)
+
 
     def _display_rect(self) -> QRect:
         if self._video_width <= 0 or self._video_height <= 0:

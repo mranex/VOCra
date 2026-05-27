@@ -33,17 +33,27 @@ class SetupScene(QWidget):
         self.project_dir_edit = QLineEdit()
         self.project_dir_edit.setReadOnly(True)
 
-        self.load_video_button = QPushButton("Load Video")
-        self.browse_project_button = QPushButton("Browse Project Dir")
+        self.load_video_button = QPushButton("Import Video")
+        self.browse_project_button = QPushButton("Choose Project Dir")
+        self.open_project_button = QPushButton("Open Project")
+        self.new_project_button = QPushButton("New Project")
         self.lock_crop_button = QPushButton("Lock Crop")
         self.lock_crop_button.setEnabled(False)
         self.create_project_button = QPushButton("Create Project")
 
-        button_row = QHBoxLayout()
-        button_row.addWidget(self.load_video_button)
-        button_row.addWidget(self.browse_project_button)
-        button_row.addWidget(self.lock_crop_button)
-        button_row.addStretch(1)
+        top_button_row = QHBoxLayout()
+        top_button_row.setSpacing(10)
+        top_button_row.addWidget(self.load_video_button)
+        top_button_row.addWidget(self.browse_project_button)
+        top_button_row.addWidget(self.open_project_button)
+        top_button_row.addWidget(self.new_project_button)
+        top_button_row.addStretch(1)
+
+        bottom_button_row = QHBoxLayout()
+        bottom_button_row.setSpacing(10)
+        bottom_button_row.addWidget(self.lock_crop_button)
+        bottom_button_row.addStretch(1)
+        bottom_button_row.addWidget(self.create_project_button)
 
         self.video_preview = VideoPreview(self)
         self.video_preview.video_widget.installEventFilter(self)
@@ -76,13 +86,15 @@ class SetupScene(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(18, 18, 18, 18)
         layout.setSpacing(14)
-        layout.addLayout(button_row)
+        layout.addLayout(top_button_row)
+        layout.addLayout(bottom_button_row)
         layout.addWidget(self.video_preview, 1)
         layout.addWidget(form_card)
-        layout.addWidget(self.create_project_button, 0)
 
         self.load_video_button.clicked.connect(self.choose_video)
         self.browse_project_button.clicked.connect(self.choose_project_dir)
+        self.open_project_button.clicked.connect(self.main_window.open_existing_project)
+        self.new_project_button.clicked.connect(self.start_new_project)
         self.lock_crop_button.clicked.connect(self.toggle_crop_lock)
         self.create_project_button.clicked.connect(self.create_project)
         self.video_preview.video_loaded.connect(self._on_video_loaded)
@@ -99,7 +111,7 @@ class SetupScene(QWidget):
     def choose_video(self) -> None:
         video_path, _filter = QFileDialog.getOpenFileName(
             self,
-            "Open Video",
+            "Import Video",
             str(Path.cwd()),
             "Video Files (*.mp4 *.mkv *.avi *.mov);;All Files (*.*)",
         )
@@ -115,7 +127,7 @@ class SetupScene(QWidget):
     def choose_project_dir(self) -> None:
         project_dir = QFileDialog.getExistingDirectory(
             self,
-            "Select Project Directory",
+            "Choose Project Directory",
             self.project_dir_edit.text() or str(Path.cwd()),
         )
         if project_dir:
@@ -147,6 +159,25 @@ class SetupScene(QWidget):
             subtitle_crop=crop,
             frame_interval=float(self.interval_spin.value()),
         )
+
+    def start_new_project(self) -> None:
+        confirm = QMessageBox.question(
+            self,
+            "New Project",
+            "Clear the current project and reset the setup form?\nThis will not delete project files on disk.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if confirm != QMessageBox.StandardButton.Yes:
+            return
+        self.main_window.reset_project_state()
+
+    def reset_form_state(self) -> None:
+        self.video_path_edit.clear()
+        self.project_dir_edit.clear()
+        self.interval_spin.setValue(0.5)
+        self.video_preview.close_source()
+        self._reset_crop_state()
 
     def refresh_from_project(self, project_dir: str | None, progress: dict | None) -> None:
         if not project_dir or not progress:

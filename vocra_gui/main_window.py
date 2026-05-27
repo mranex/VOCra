@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 from pathlib import Path
 
-from PySide6.QtCore import QTimer, Qt
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import (
     QApplication,
     QFileDialog,
@@ -11,12 +11,14 @@ from PySide6.QtWidgets import (
     QHBoxLayout,
     QMainWindow,
     QMessageBox,
+    QSizePolicy,
     QStackedWidget,
     QToolButton,
     QVBoxLayout,
     QWidget,
 )
 
+from PySide6.QtGui import QIcon
 from vocra_core.app_config import load_global_config, merge_global_config_into_progress, save_global_config
 from vocra_core.project_manager import create_project, load_project, save_progress
 from vocra_gui.scene_config import ConfigScene
@@ -24,6 +26,7 @@ from vocra_gui.scene_export import ExportScene
 from vocra_gui.scene_process import ProcessScene
 from vocra_gui.scene_setup import SetupScene
 from vocra_gui.scene_translator import TranslatorScene
+from vocra_gui.widgets.scene_nav_button import SceneNavButton
 
 
 class VoCRAMainWindow(QMainWindow):
@@ -31,6 +34,11 @@ class VoCRAMainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("VoCRA")
         self.resize(1440, 920)
+        
+        icon_path = os.path.join(os.path.dirname(__file__), "icon.png")
+        if os.path.exists(icon_path):
+            self.setWindowIcon(QIcon(icon_path))
+
         self.project_dir: str | None = None
         self.progress: dict | None = None
         self.global_config = load_global_config()
@@ -63,29 +71,27 @@ class VoCRAMainWindow(QMainWindow):
 
     def _build_ui(self) -> None:
         root = QWidget()
-        layout = QHBoxLayout(root)
+        root.setObjectName("RootWidget")
+        layout = QVBoxLayout(root)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
-        sidebar = QFrame()
-        sidebar.setObjectName("Sidebar")
-        sidebar.setFixedWidth(210)
-        sidebar_layout = QVBoxLayout(sidebar)
-        sidebar_layout.setContentsMargins(14, 18, 14, 18)
-        sidebar_layout.setSpacing(8)
+        top_nav = QFrame()
+        top_nav.setObjectName("TopNav")
+        top_nav_layout = QHBoxLayout(top_nav)
+        top_nav_layout.setContentsMargins(18, 14, 18, 10)
+        top_nav_layout.setSpacing(0)
 
         labels = ["Setup", "Process", "Translate", "Export", "Config"]
         for index, label in enumerate(labels):
-            button = QToolButton()
-            button.setText(label)
+            button = SceneNavButton(label)
             button.setProperty("nav", True)
-            button.setCheckable(True)
+            button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
             button.clicked.connect(lambda checked=False, idx=index: self.set_active_scene(idx))
-            sidebar_layout.addWidget(button)
+            top_nav_layout.addWidget(button, 1)
             self.sidebar_buttons.append(button)
-        sidebar_layout.addStretch(1)
 
-        layout.addWidget(sidebar)
+        layout.addWidget(top_nav)
         layout.addWidget(self.stack, 1)
         self.setCentralWidget(root)
 
@@ -105,7 +111,7 @@ class VoCRAMainWindow(QMainWindow):
         message = QMessageBox(self)
         message.setWindowTitle("Start VoCRA")
         message.setText("Open a video for a new project, or open an existing project folder.")
-        open_video_button = message.addButton("Open Video", QMessageBox.ButtonRole.AcceptRole)
+        open_video_button = message.addButton("Import Video", QMessageBox.ButtonRole.AcceptRole)
         open_project_button = message.addButton("Open Project", QMessageBox.ButtonRole.ActionRole)
         message.addButton("Later", QMessageBox.ButtonRole.RejectRole)
         message.exec()
@@ -149,6 +155,12 @@ class VoCRAMainWindow(QMainWindow):
     def reload_current_project(self) -> None:
         if self.project_dir:
             self.load_project(self.project_dir)
+
+    def reset_project_state(self) -> None:
+        self.project_dir = None
+        self.progress = None
+        self.scene_setup.reset_form_state()
+        self.refresh_all_scenes()
 
     def refresh_all_scenes(self) -> None:
         for scene in self.scenes:

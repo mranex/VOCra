@@ -4,10 +4,19 @@ import json
 from pathlib import Path
 
 from vocra_core.project_manager import load_project
+from vocra_core.timestamp_utils import get_preferred_timestamp, resolve_end_timestamp
 
 
-def export_srt(project_dir: str, output_path: str, use_translation: bool = False) -> str:
-    entries = _build_export_entries(project_dir, use_translation=use_translation)
+def export_srt(
+    project_dir: str,
+    output_path: str,
+    use_translation: bool = False,
+    export_source: str | None = None,
+) -> str:
+    entries = _build_export_entries(
+        project_dir,
+        export_source=_resolve_export_source(use_translation=use_translation, export_source=export_source),
+    )
     lines: list[str] = []
     for index, entry in enumerate(entries, start=1):
         lines.extend(
@@ -22,8 +31,16 @@ def export_srt(project_dir: str, output_path: str, use_translation: bool = False
     return _write_output(output_path, content)
 
 
-def export_ass(project_dir: str, output_path: str, use_translation: bool = False) -> str:
-    entries = _build_export_entries(project_dir, use_translation=use_translation)
+def export_ass(
+    project_dir: str,
+    output_path: str,
+    use_translation: bool = False,
+    export_source: str | None = None,
+) -> str:
+    entries = _build_export_entries(
+        project_dir,
+        export_source=_resolve_export_source(use_translation=use_translation, export_source=export_source),
+    )
     header = "\n".join(
         [
             "[Script Info]",
@@ -48,24 +65,38 @@ def export_ass(project_dir: str, output_path: str, use_translation: bool = False
     return _write_output(output_path, content)
 
 
-def export_txt(project_dir: str, output_path: str, use_translation: bool = False) -> str:
-    entries = _build_export_entries(project_dir, use_translation=use_translation)
+def export_txt(
+    project_dir: str,
+    output_path: str,
+    use_translation: bool = False,
+    export_source: str | None = None,
+) -> str:
+    entries = _build_export_entries(
+        project_dir,
+        export_source=_resolve_export_source(use_translation=use_translation, export_source=export_source),
+    )
     content = "\n".join(f"[{entry['start']}] {entry['text']}" for entry in entries).rstrip() + "\n"
     return _write_output(output_path, content)
 
 
-def _build_export_entries(project_dir: str, *, use_translation: bool) -> list[dict[str, str]]:
+def _build_export_entries(project_dir: str, *, export_source: str) -> list[dict[str, str]]:
     progress = load_project(project_dir)
     project_path = Path(project_dir).expanduser().resolve()
 
     segments = _load_json(project_path / progress["cache_files"]["segments"]).get("segments", [])
     timestamps = _load_json(project_path / progress["cache_files"]["timestamp"]).get("frames", [])
-    ocr_items = _load_json(project_path / progress["cache_files"]["ocr_final"]).get("items", [])
-    translation_items = _load_json(project_path / progress["cache_files"]["translation"], default={"items": []}).get("items", [])
+    timestamp_lookup = {item["image"]: item for item in timestamps}
+    frame_order = [str(item["image"]) for item in timestamps]
+    interval_sec = float(progress.get("frame_extract", {}).get("interval_sec", 0.5) or 0.5)
+    ocr_lookup: dict[str, dict] = {}
+    translation_lookup: dict[int, dict] = {}
 
-    timestamp_lookup = {item["image"]: item["timestamp"] for item in timestamps}
-    ocr_lookup = {item["image"]: item for item in ocr_items}
-    translation_lookup = {int(item["segment_id"]): item for item in translation_items}
+    if export_source == "final_ocr":
+        ocr_items = _load_json(project_path / progress["cache_files"]["ocr_final"]).get("items", [])
+        ocr_lookup = {item["image"]: item for item in ocr_items}
+    elif export_source == "translation":
+        translation_items = _load_json(project_path / progress["cache_files"]["translation"]).get("items", [])
+        translation_lookup = {int(item["segment_id"]): item for item in translation_items}
 
     entries: list[dict[str, str]] = []
     for segment in segments:
@@ -77,11 +108,13 @@ def _build_export_entries(project_dir: str, *, use_translation: bool) -> list[di
         if start_image not in timestamp_lookup or end_image not in timestamp_lookup:
             raise KeyError(f"Missing timestamp for segment {segment_id}")
 
-        if use_translation:
+        if export_source == "translation":
             translated = translation_lookup.get(segment_id)
             if translated is None:
                 raise KeyError(f"Missing translation for segment {segment_id}")
             text = str(translated.get("translation", "") or "")
+        elif export_source == "draft_voted":
+            text = str(segment.get("voted_draft_text", "") or "")
         else:
             ocr_item = ocr_lookup.get(represent_image)
             if ocr_item is None:
@@ -90,12 +123,23 @@ def _build_export_entries(project_dir: str, *, use_translation: bool) -> list[di
 
         entries.append(
             {
-                "start": timestamp_lookup[start_image],
-                "end": timestamp_lookup[end_image],
+                "start": get_preferred_timestamp(timestamp_lookup[start_image]),
+                "end": resolve_end_timestamp(
+                    end_image,
+                    timestamp_lookup=timestamp_lookup,
+                    frame_order=frame_order,
+                    interval_sec=interval_sec,
+                ),
                 "text": text,
             }
         )
     return entries
+
+
+def _resolve_export_source(*, use_translation: bool, export_source: str | None) -> str:
+    if export_source:
+        return str(export_source)
+    return "translation" if use_translation else "final_ocr"
 
 
 def _to_srt_timestamp(timestamp: str) -> str:

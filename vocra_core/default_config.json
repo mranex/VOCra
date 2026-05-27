@@ -1,4 +1,17 @@
 {
+  "ssim_filter": {
+    "enabled": true,
+    "threshold": 0.95
+  },
+  "segmenter": {
+    "similarity_threshold": 0.5,
+    "blank_tolerance": 1,
+    "ssim_cross_check": true,
+    "ssim_same_threshold": 0.7,
+    "ssim_override_threshold": 0.9,
+    "use_sharpness_representative": true,
+    "use_text_voting": true
+  },
   "final_ocr": {
     "provider": "llama_cpp",
     "server_url": "http://127.0.0.1:8080",
