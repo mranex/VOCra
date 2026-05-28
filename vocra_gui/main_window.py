@@ -21,6 +21,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtGui import QIcon
 from vocra_core.app_config import load_global_config, merge_global_config_into_progress, save_global_config
 from vocra_core.project_manager import create_project, load_project, save_progress
+from vocra_gui.scene_burn import BurnScene
 from vocra_gui.scene_config import ConfigScene
 from vocra_gui.scene_export import ExportScene
 from vocra_gui.scene_process import ProcessScene
@@ -51,12 +52,14 @@ class VoCRAMainWindow(QMainWindow):
         self.scene_process = ProcessScene(self)
         self.scene_translator = TranslatorScene(self)
         self.scene_export = ExportScene(self)
+        self.scene_burn = BurnScene(self)
         self.scene_config = ConfigScene(self)
         self.scenes = [
             self.scene_setup,
             self.scene_process,
             self.scene_translator,
             self.scene_export,
+            self.scene_burn,
             self.scene_config,
         ]
         for scene in self.scenes:
@@ -82,7 +85,7 @@ class VoCRAMainWindow(QMainWindow):
         top_nav_layout.setContentsMargins(18, 14, 18, 10)
         top_nav_layout.setSpacing(0)
 
-        labels = ["Setup", "Process", "Translate", "Export", "Config"]
+        labels = ["Setup", "Process", "Translate", "Export", "Burn", "Config"]
         for index, label in enumerate(labels):
             button = SceneNavButton(label)
             button.setProperty("nav", True)
@@ -171,7 +174,7 @@ class VoCRAMainWindow(QMainWindow):
         save_global_config(config)
         self.global_config = load_global_config()
         if self.project_dir is not None:
-            self.progress = self._sync_global_config_to_project(self.project_dir, progress=self.progress)
+            self.progress = self._sync_global_config_to_project(self.project_dir)
         self.refresh_all_scenes()
 
     def _sync_global_config_to_project(self, project_dir: str, progress: dict | None = None) -> dict:

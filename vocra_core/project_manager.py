@@ -62,6 +62,7 @@ def create_project(
         "segmenter": deepcopy(defaults.get("segmenter", {"similarity_threshold": 0.5, "blank_tolerance": 1})),
         "final_ocr": deepcopy(defaults["final_ocr"]),
         "translator": deepcopy(defaults["translator"]),
+        "burn_video": deepcopy(defaults["burn_video"]),
     }
 
     save_progress(str(project_path), progress)
@@ -158,6 +159,10 @@ def _normalize_progress_schema(progress: dict) -> dict:
     translator = normalized.setdefault("translator", {})
     for key, value in defaults.get("translator", {}).items():
         translator.setdefault(key, deepcopy(value))
+
+    burn_video = normalized.setdefault("burn_video", {})
+    for key, value in defaults.get("burn_video", {}).items():
+        burn_video.setdefault(key, deepcopy(value))
 
     return normalized
 

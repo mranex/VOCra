@@ -23,6 +23,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from vocra_core.burner import check_ffmpeg, check_nvidia_encode, format_nvidia_check_report
 from vocra_core.final_ocr.llama_server_manager import LlamaServerManager
 
 
@@ -40,6 +41,7 @@ class ConfigScene(QWidget):
         self._build_segmenter_group()
         self._build_final_group()
         self._build_translator_group()
+        self._build_burn_group()
 
         self.save_button = QPushButton("Save Config")
         self.save_button.clicked.connect(self.save_config)
@@ -62,6 +64,7 @@ class ConfigScene(QWidget):
         segmenter = global_config.get("segmenter", {})
         final = global_config.get("final_ocr", {})
         translator = global_config.get("translator", {})
+        burn_video = global_config.get("burn_video", {})
 
         self._set_combo_data(self.draft_language_combo, draft.get("language", "auto"))
         self.ssim_enabled_check.setChecked(bool(ssim_filter.get("enabled", True)))
@@ -102,6 +105,10 @@ class ConfigScene(QWidget):
         self.translator_timeout_spin.setValue(int(translator.get("timeout", 120) or 120))
         self._set_combo_data(self.translator_style_combo, translator.get("style", "default"))
         self.translator_custom_prompt_edit.setPlainText(str(translator.get("custom_prompt", "") or ""))
+        self.ffmpeg_path_edit.setText(str(burn_video.get("ffmpeg_path", "") or ""))
+        self.burn_blur_enabled_check.setChecked(bool(burn_video.get("blur_enabled", True)))
+        self.burn_blur_strength_spin.setValue(int(burn_video.get("blur_strength", 8) or 8))
+        self._set_combo_data(self.burn_style_combo, burn_video.get("style_preset", "balanced"))
         self._update_provider_visibility()
         self._update_translator_prompt_visibility()
 
@@ -152,6 +159,12 @@ class ConfigScene(QWidget):
         translator["timeout"] = int(self.translator_timeout_spin.value())
         translator["style"] = self.translator_style_combo.currentData()
         translator["custom_prompt"] = self.translator_custom_prompt_edit.toPlainText().strip()
+
+        burn_video = config.setdefault("burn_video", {})
+        burn_video["ffmpeg_path"] = self.ffmpeg_path_edit.text().strip()
+        burn_video["blur_enabled"] = self.burn_blur_enabled_check.isChecked()
+        burn_video["blur_strength"] = int(self.burn_blur_strength_spin.value())
+        burn_video["style_preset"] = self.burn_style_combo.currentData()
 
         self.main_window.save_global_app_config(config)
         QMessageBox.information(
@@ -403,8 +416,56 @@ class ConfigScene(QWidget):
         layout.addRow(note)
         self.container_layout.addWidget(_with_title("Translator", frame))
 
-    def _browse_into(self, line_edit: QLineEdit, title: str) -> None:
-        path, _filter = QFileDialog.getOpenFileName(self, title, str(Path.cwd()), "GGUF Files (*.gguf);;All Files (*.*)")
+    def _build_burn_group(self) -> None:
+        frame = QFrame()
+        frame.setObjectName("Card")
+        layout = QFormLayout(frame)
+        layout.setContentsMargins(16, 16, 16, 16)
+
+        self.ffmpeg_path_edit = QLineEdit()
+        browse_ffmpeg = QPushButton("Browse FFmpeg")
+        browse_ffmpeg.clicked.connect(
+            lambda: self._browse_into(
+                self.ffmpeg_path_edit,
+                "Select ffmpeg.exe",
+                "FFmpeg (ffmpeg.exe);;All Files (*.*)",
+            )
+        )
+        path_row = QHBoxLayout()
+        path_row.addWidget(self.ffmpeg_path_edit, 1)
+        path_row.addWidget(browse_ffmpeg)
+
+        self.burn_blur_enabled_check = QCheckBox("Blur original subtitle region")
+        self.burn_blur_enabled_check.setChecked(True)
+        self.burn_blur_strength_spin = QSpinBox()
+        self.burn_blur_strength_spin.setRange(1, 64)
+        self.burn_blur_strength_spin.setValue(8)
+        self.burn_style_combo = QComboBox()
+        self.burn_style_combo.addItem("Balanced", "balanced")
+        self.burn_style_combo.addItem("Large", "large")
+        self.burn_style_combo.addItem("Compact", "compact")
+
+        check_ffmpeg_button = QPushButton("Check FFmpeg")
+        check_nvidia_button = QPushButton("Check NVIDIA GPU Encode")
+        check_ffmpeg_button.clicked.connect(self._check_ffmpeg)
+        check_nvidia_button.clicked.connect(self._check_nvidia_encode)
+        check_row = QHBoxLayout()
+        check_row.addWidget(check_ffmpeg_button)
+        check_row.addWidget(check_nvidia_button)
+        check_row.addStretch(1)
+
+        layout.addRow("FFmpeg Path", path_row)
+        layout.addRow("Default Blur", self.burn_blur_enabled_check)
+        layout.addRow("Blur Strength", self.burn_blur_strength_spin)
+        layout.addRow("Subtitle Style", self.burn_style_combo)
+        layout.addRow(check_row)
+        note = QLabel("Leave FFmpeg Path empty to auto-detect ffmpeg from PATH.")
+        note.setWordWrap(True)
+        layout.addRow(note)
+        self.container_layout.addWidget(_with_title("Burn Video", frame))
+
+    def _browse_into(self, line_edit: QLineEdit, title: str, file_filter: str = "GGUF Files (*.gguf);;All Files (*.*)") -> None:
+        path, _filter = QFileDialog.getOpenFileName(self, title, str(Path.cwd()), file_filter)
         if path:
             line_edit.setText(path)
 
@@ -440,6 +501,22 @@ class ConfigScene(QWidget):
         manager = self._manager_from_form()
         alive, message = manager.check_health()
         QMessageBox.information(self, "Health Check", message if alive else f"Not ready:\n{message}")
+
+    def _check_ffmpeg(self) -> None:
+        result = check_ffmpeg(self.ffmpeg_path_edit.text().strip())
+        detail = (
+            f"FFmpeg: {'OK' if result.get('ok') else 'FAIL'}\n"
+            f"Path: {result.get('ffmpeg_path') or '(not found)'}\n"
+            f"h264_nvenc: {'OK' if result.get('has_h264_nvenc') else 'missing'}\n"
+            f"hevc_nvenc: {'OK' if result.get('has_hevc_nvenc') else 'missing'}\n"
+            f"av1_nvenc: {'OK' if result.get('has_av1_nvenc') else 'missing'}\n\n"
+            f"{result.get('message', '')}"
+        )
+        QMessageBox.information(self, "FFmpeg Check", detail)
+
+    def _check_nvidia_encode(self) -> None:
+        result = check_nvidia_encode(self.ffmpeg_path_edit.text().strip())
+        QMessageBox.information(self, "NVIDIA GPU Encode Check", format_nvidia_check_report(result))
 
     def _update_provider_visibility(self) -> None:
         provider = self.final_provider_combo.currentData()

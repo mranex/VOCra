@@ -52,5 +52,29 @@
     "custom_prompt": "",
     "json_mode": true,
     "max_retries": 2
+  },
+  "burn_video": {
+    "ffmpeg_path": "",
+    "blur_enabled": true,
+    "blur_strength": 8,
+    "style_preset": "balanced",
+    "burn_style": {
+      "font_family": "Arial",
+      "font_size": 42,
+      "bold": false,
+      "italic": false,
+      "primary_color": "#FFFFFF",
+      "outline_color": "#000000",
+      "shadow_color": "#000000",
+      "opacity": 100,
+      "outline_width": 2,
+      "shadow_depth": 0,
+      "alignment": "bottom_center",
+      "margin_l": 40,
+      "margin_r": 40,
+      "margin_v": 40,
+      "max_line_chars": 42,
+      "position_mode": "screen"
+    }
   }
 }

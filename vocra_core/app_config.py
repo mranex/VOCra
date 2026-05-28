@@ -72,12 +72,14 @@ def merge_global_config_into_progress(progress: dict[str, Any], global_config: d
     merged.setdefault("segmenter", {})
     merged.setdefault("final_ocr", {})
     merged.setdefault("translator", {})
+    merged.setdefault("burn_video", {})
 
     draft_config = deepcopy(global_config.get("draft_ocr", {}))
     ssim_filter_config = deepcopy(global_config.get("ssim_filter", {}))
     segmenter_config = deepcopy(global_config.get("segmenter", {}))
     final_config = deepcopy(global_config.get("final_ocr", {}))
     translator_config = deepcopy(global_config.get("translator", {}))
+    burn_config = deepcopy(global_config.get("burn_video", {}))
     translator_config.pop("api_key", None)
 
     merged["draft_ocr"].update(draft_config)
@@ -86,6 +88,7 @@ def merge_global_config_into_progress(progress: dict[str, Any], global_config: d
     merged["final_ocr"].update(final_config)
     merged["translator"].update(translator_config)
     merged["translator"].pop("api_key", None)
+    merged["burn_video"].update(burn_config)
     return merged
 
 
@@ -123,11 +126,12 @@ def _default_global_config() -> dict[str, Any]:
         "segmenter": deepcopy(defaults.get("segmenter", {"similarity_threshold": 0.5, "blank_tolerance": 1})),
         "final_ocr": deepcopy(defaults["final_ocr"]),
         "translator": deepcopy(defaults["translator"]),
+        "burn_video": deepcopy(defaults["burn_video"]),
     }
 
 
 def _merge_sections(target: dict[str, Any], source: dict[str, Any]) -> None:
-    for section_name in ("draft_ocr", "ssim_filter", "segmenter", "final_ocr", "translator"):
+    for section_name in ("draft_ocr", "ssim_filter", "segmenter", "final_ocr", "translator", "burn_video"):
         source_section = source.get(section_name, {})
         if not isinstance(source_section, dict):
             continue

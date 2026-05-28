@@ -144,10 +144,15 @@ class ExportScene(QWidget):
     def save_edits(self) -> None:
         if not self.main_window.project_dir:
             return
+        if self._save_edits_to_cache(show_messages=True):
+            self.reload_table()
+
+    def _save_edits_to_cache(self, *, show_messages: bool) -> bool:
         edits = self.table.get_edited_items()
         if not edits:
-            QMessageBox.information(self, "No Changes", "There are no edited rows to save.")
-            return
+            if show_messages:
+                QMessageBox.information(self, "No Changes", "There are no edited rows to save.")
+            return False
         progress = load_project(self.main_window.project_dir)
         project_path = Path(self.main_window.project_dir)
         if self.translation_radio.isChecked():
@@ -183,8 +188,9 @@ class ExportScene(QWidget):
                     items_by_image[image]["edited"] = True
             payload["items"] = [items_by_image[key] for key in sorted(items_by_image)]
             payload_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-        self.reload_table()
-        QMessageBox.information(self, "Saved", "Edits saved to cache.")
+        if show_messages:
+            QMessageBox.information(self, "Saved", "Edits saved to cache.")
+        return True
 
     def export_file(self, kind: str) -> None:
         if not self.main_window.project_dir:
